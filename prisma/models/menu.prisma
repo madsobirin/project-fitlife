@@ -1,0 +1,14 @@
+model Menu {
+  id            BigInt @id @default(autoincrement())
+  nama_menu     String
+  deskripsi     String @db.Text
+  kalori        Int
+  waktu_memasak Int
+  dibaca        BigInt @default(0)
+  gambar        String
+
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+
+  @@map("menus")
+}
