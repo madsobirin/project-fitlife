@@ -42,7 +42,7 @@ export default function Home() {
             whileTap={{ scale: 0.95 }}
             className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold rounded-full shadow-lg shadow-emerald-500/30 transition"
           >
-            Get Started
+            Get Startedd
           </motion.button>
         </motion.div>
       </div>
