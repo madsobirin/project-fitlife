@@ -2,6 +2,7 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { GoArrowUpRight } from "react-icons/go";
+import Img from "next/image";
 
 type CardNavLink = {
   label: string;
@@ -287,35 +288,24 @@ const CardNav: React.FC<CardNavProps> = ({
     >
       <nav
         ref={navRef}
-        className={`card-nav ${isExpanded ? "open" : ""} block h-[60px] p-0 rounded-xl shadow-md relative overflow-hidden will-change-[height] `}
+        className={`card-nav ${isExpanded ? "open" : ""}  block h-[60px] p-0 rounded-xl shadow-md relative overflow-hidden will-change-[height]  `}
         style={{ backgroundColor: baseColor }}
       >
-        <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-[1.1rem] z-[2]">
-          <div
-            className={`hamburger-menu ${isHamburgerOpen ? "open" : ""} group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none`}
-            onClick={toggleMenu}
-            role="button"
-            aria-label={isExpanded ? "Close menu" : "Open menu"}
-            tabIndex={0}
-            style={{ color: menuColor || "#000" }}
-          >
-            <div
-              className={`hamburger-line w-[30px] h-[2px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
-                isHamburgerOpen ? "translate-y-[4px] rotate-45" : ""
-              } group-hover:opacity-75`}
-            />
-            <div
-              className={`hamburger-line w-[30px] h-[2px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
-                isHamburgerOpen ? "-translate-y-[4px] -rotate-45" : ""
-              } group-hover:opacity-75`}
+        <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-[1.1rem] z-2">
+          {/* 1. LOGO (Sekarang jadi yang pertama di kiri pada mobile) */}
+          <div className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-0">
+            <Img
+              src={logo}
+              alt={logoAlt}
+              className="logo h-[28px]"
+              width={30}
+              height={30}
             />
           </div>
 
-          <div className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-none">
-            <img src={logo} alt={logoAlt} className="logo h-[28px]" />
-          </div>
-
-          <div className="flex items-center gap-2 order-3 md:order-none">
+          {/* 2. GROUP TOMBOL (Dark Mode + CTA) */}
+          {/* Kita pakai order-2 agar dia di sebelah kiri hamburger pada mobile */}
+          <div className="flex items-center gap-2 order-2 md:order-0 ml-auto md:ml-0">
             <button
               ref={toggleBtnRef}
               type="button"
@@ -371,6 +361,7 @@ const CardNav: React.FC<CardNavProps> = ({
                 <path d="M21 5h-4" />
               </svg>
             </button>
+
             <button
               type="button"
               className="card-nav-cta-button p-2 hidden md:inline-flex border-0 rounded-[calc(0.75rem-0.2rem)] px-4 items-center h-full font-medium cursor-pointer transition-colors duration-300"
@@ -378,6 +369,27 @@ const CardNav: React.FC<CardNavProps> = ({
             >
               Get Started
             </button>
+          </div>
+
+          {/* 3. HAMBURGER (Paling kanan pada mobile) */}
+          <div
+            className={`hamburger-menu ${isHamburgerOpen ? "open" : ""} mr-2 group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-3 md:order-first`}
+            onClick={toggleMenu}
+            role="button"
+            aria-label={isExpanded ? "Close menu" : "Open menu"}
+            tabIndex={0}
+            style={{ color: menuColor || "#000" }}
+          >
+            <div
+              className={`hamburger-line w-[30px] h-[2px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
+                isHamburgerOpen ? "translate-y-[4px] rotate-45" : ""
+              } group-hover:opacity-75`}
+            />
+            <div
+              className={`hamburger-line w-[30px] h-[2px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
+                isHamburgerOpen ? "-translate-y-[4px] -rotate-45" : ""
+              } group-hover:opacity-75`}
+            />
           </div>
         </div>
 
