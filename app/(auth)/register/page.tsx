@@ -60,10 +60,10 @@ function RegisterPage() {
         </CardContent>
         <CardFooter className="flex-col gap-2">
           <Button type="submit" className="w-full cursor-pointer">
-            Login
+            Register
           </Button>
           <Button variant="outline" className="w-full cursor-pointer">
-            Login with Google
+            Register with Google
           </Button>
         </CardFooter>
       </Card>
