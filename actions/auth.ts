@@ -27,7 +27,7 @@ export async function register(formData: FormData) {
     data: { name, email, password: hashedPassword },
   });
 
-  redirect("/login");
+  redirect("/login?registered=1");
 }
 
 export async function login(formData: FormData) {

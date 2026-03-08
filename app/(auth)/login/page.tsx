@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { login } from "@/actions/auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,9 @@ import Image from "next/image";
 import { motion, Variants } from "framer-motion";
 import AuthLayout from "@/components/auth/authLayout";
 import SubmitButton from "@/components/auth/ui/button";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
+// import router from "next/navigation";
 
 const container: Variants = {
   hidden: { opacity: 0 },
@@ -33,6 +36,10 @@ const item: Variants = {
 };
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const registered = searchParams.get("registered");
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -49,6 +56,29 @@ export default function LoginPage() {
     }
   }
 
+  useEffect(() => {
+    if (registered) {
+      toast.success("Akun berhasil dibuat, silakan login.", {
+        id: "register-success",
+        style: {
+          background: "white",
+          color: "black",
+        },
+      });
+    }
+  }, [registered, router]);
+
+  useEffect(() => {
+    if (errors.form) {
+      toast.error(errors.form[0], {
+        id: "login-error",
+        style: {
+          color: "red",
+        },
+      });
+    }
+  }, [errors]);
+
   return (
     <AuthLayout
       title="Welcome Back"
@@ -62,10 +92,6 @@ export default function LoginPage() {
         variants={container}
         className="space-y-6"
       >
-        {errors.form && (
-          <p className="text-sm text-red-500 text-center">{errors.form[0]}</p>
-        )}
-
         {/* email */}
         <motion.div variants={item} className="space-y-2">
           <Label

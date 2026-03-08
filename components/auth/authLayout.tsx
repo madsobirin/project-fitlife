@@ -2,6 +2,7 @@
 
 import { motion, Variants } from "framer-motion";
 import AuthLink from "@/components/ui/authLink";
+import { Toaster } from "@/components/ui/sonner";
 
 const container: Variants = {
   hidden: { opacity: 0 },
@@ -53,6 +54,7 @@ export default function AuthLayout({
         </motion.div>
 
         {children}
+        <Toaster position="top-center" richColors />
       </motion.div>
     </div>
   );
