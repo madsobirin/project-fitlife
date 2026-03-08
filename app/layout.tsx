@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const interSans = Inter({
   subsets: ["latin"],
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${interSans.className} antialiased`}>
         <ThemeProvider>{children}</ThemeProvider>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );
