@@ -8,7 +8,7 @@ const LayoutAdmin = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] dark:bg-background-base transition-colors duration-300">
+    <div className="flex min-h-screen bg-[#F8FAFC]">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       {/* Main Content Area */}
