@@ -39,9 +39,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       {/* Right Side Actions */}
       <div className="flex items-center gap-3 md:gap-6">
         {/* Mobile Search Icon */}
-        <button className="md:hidden relative p-2 text-slate-500 hover:bg-slate-50 rounded-lg transition-colors">
-          <Search size={22} />
-        </button>
+        {pathname !== "/menu" && (
+          <button className="md:hidden relative p-2 text-slate-500 hover:bg-slate-50 rounded-lg transition-colors">
+            <Search size={22} />
+          </button>
+        )}
 
         {/* Divider Vertical */}
         <div className="h-8 w-px bg-slate-200" />
