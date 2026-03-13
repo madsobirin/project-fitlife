@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE "accounts" (
     "id" SERIAL NOT NULL,
-    "nama_lengkap" TEXT,
+    "name" TEXT,
     "username" TEXT,
     "email" TEXT NOT NULL,
     "google_id" TEXT,
@@ -23,7 +23,7 @@ CREATE TABLE "accounts" (
 
 -- CreateTable
 CREATE TABLE "artikels" (
-    "id" BIGSERIAL NOT NULL,
+    "id" SERIAL NOT NULL,
     "judul" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "kategori" TEXT NOT NULL,
@@ -36,16 +36,6 @@ CREATE TABLE "artikels" (
     "updated_at" TIMESTAMP(3),
 
     CONSTRAINT "artikels_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "kategori" (
-    "id_kategori" BIGSERIAL NOT NULL,
-    "nama_kategori" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3),
-
-    CONSTRAINT "kategori_pkey" PRIMARY KEY ("id_kategori")
 );
 
 -- CreateTable
@@ -62,12 +52,13 @@ CREATE TABLE "makanan" (
 
 -- CreateTable
 CREATE TABLE "menus" (
-    "id" BIGSERIAL NOT NULL,
+    "id" SERIAL NOT NULL,
     "nama_menu" TEXT NOT NULL,
     "deskripsi" TEXT NOT NULL,
     "kalori" INTEGER NOT NULL,
+    "target_status" TEXT NOT NULL,
     "waktu_memasak" INTEGER NOT NULL,
-    "dibaca" BIGINT NOT NULL DEFAULT 0,
+    "dibaca" INTEGER DEFAULT 0,
     "gambar" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3),

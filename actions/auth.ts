@@ -50,5 +50,5 @@ export async function login(formData: FormData) {
   if (!passwordMatch)
     return { error: { form: ["Email atau password salah."] } };
   // Di sini nanti anda setup Session (NextAuth), untuk sekarang kita redirect
-  redirect("/dashboard");
+  redirect("/");
 }
