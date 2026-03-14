@@ -44,7 +44,6 @@ export async function PATCH(
   }
 }
 
-// 2. DELETE: Hapus Akun
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
