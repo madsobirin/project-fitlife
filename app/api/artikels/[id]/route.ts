@@ -12,6 +12,10 @@ export async function GET(
     const { id: idParam } = await params;
     const id = parseInt(idParam);
 
+    if (isNaN(id)) {
+      return NextResponse.json({ message: "ID tidak valid" }, { status: 400 });
+    }
+
     const artikel = await prisma.artikel.update({
       where: { id },
       data: { dibaca: { increment: 1 } },
@@ -42,6 +46,11 @@ export async function PUT(
   try {
     const { id: idParam } = await params;
     const id = parseInt(idParam);
+
+    if (isNaN(id)) {
+      return NextResponse.json({ message: "ID tidak valid" }, { status: 400 });
+    }
+
     const body = await request.json();
 
     const validated = ArtikelSchema.safeParse(body);

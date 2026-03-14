@@ -38,6 +38,14 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not defined");
+      return NextResponse.json(
+        { message: "Internal Server Error" },
+        { status: 500 },
+      );
+    }
+
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const token = await new SignJWT({
       userId: user.id,
@@ -56,10 +64,10 @@ export async function POST(request: Request) {
       },
       { status: 200 },
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error during login:", error);
     return NextResponse.json(
-      { message: "Internal Server Error", error: error },
+      { message: "Internal Server Error" },
       { status: 500 },
     );
   }

@@ -38,10 +38,10 @@ export async function POST(request: Request) {
       { message: "Registrasi berhasil", userId: user.id },
       { status: 201 },
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error during registration:", error);
     return NextResponse.json(
-      { message: "Internal Server Error", error: error },
+      { message: "Internal Server Error" },
       { status: 500 },
     );
   }
