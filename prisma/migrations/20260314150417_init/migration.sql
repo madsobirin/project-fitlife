@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "TargetStatus" AS ENUM ('Kurus', 'Normal', 'Berlebih', 'Obesitas');
+
 -- CreateTable
 CREATE TABLE "accounts" (
     "id" SERIAL NOT NULL,
@@ -9,7 +12,7 @@ CREATE TABLE "accounts" (
     "password" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3),
-    "is_active" BOOLEAN NOT NULL DEFAULT false,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
     "last_login_at" TIMESTAMP(3),
     "phone" TEXT,
     "birthdate" TIMESTAMP(3),
@@ -30,8 +33,8 @@ CREATE TABLE "artikels" (
     "penulis" TEXT NOT NULL DEFAULT 'Admin',
     "isi" TEXT NOT NULL,
     "gambar" TEXT NOT NULL,
-    "is_featured" BOOLEAN NOT NULL DEFAULT false,
-    "dibaca" INTEGER NOT NULL DEFAULT 0,
+    "is_featured" BOOLEAN DEFAULT false,
+    "dibaca" INTEGER DEFAULT 0,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3),
 
@@ -56,7 +59,7 @@ CREATE TABLE "menus" (
     "nama_menu" TEXT NOT NULL,
     "deskripsi" TEXT NOT NULL,
     "kalori" INTEGER NOT NULL,
-    "target_status" TEXT NOT NULL,
+    "target_status" "TargetStatus" NOT NULL,
     "waktu_memasak" INTEGER NOT NULL,
     "dibaca" INTEGER DEFAULT 0,
     "gambar" TEXT NOT NULL,

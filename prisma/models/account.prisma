@@ -14,7 +14,7 @@ model Account {
   created_at DateTime? @default(now())
   updated_at DateTime? @updatedAt
 
-  is_active Boolean @default(false)
+  is_active Boolean @default(true)
 
   last_login_at DateTime?
   phone         String?
