@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { login } from "@/actions/auth";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { motion, Variants } from "framer-motion";
 import AuthLayout from "@/components/auth/authLayout";
@@ -29,18 +29,48 @@ const item: Variants = {
 };
 
 export default function LoginClient({ registered }: { registered?: string }) {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     email: "",
+    password: "",
   });
-
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  async function handleSubmit(data: FormData) {
+  // Fungsi Submit ke API
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setIsLoading(true);
     setErrors({});
-    const result = await login(data);
 
-    if (result?.error) {
-      setErrors(result.error);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (result.errors) {
+          setErrors(result.errors);
+        } else {
+          toast.error(
+            result.message || "Login gagal, cek kembali email/password.",
+          );
+        }
+      } else {
+        toast.success("Login Berhasil! Selamat datang kembali.");
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch {
+      toast.error("Gagal terhubung ke server. Periksa koneksi internet Anda.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -52,14 +82,6 @@ export default function LoginClient({ registered }: { registered?: string }) {
     }
   }, [registered]);
 
-  useEffect(() => {
-    if (errors?.form) {
-      toast.error(errors.form[0], {
-        id: "login-error",
-      });
-    }
-  }, [errors]);
-
   return (
     <AuthLayout
       title="Welcome Back"
@@ -69,8 +91,10 @@ export default function LoginClient({ registered }: { registered?: string }) {
       href="/register"
     >
       <motion.form
-        action={handleSubmit}
+        onSubmit={handleSubmit} // Ganti action ke onSubmit
         variants={container}
+        initial="hidden"
+        animate="show"
         className="space-y-6"
       >
         {/* email */}
@@ -87,6 +111,7 @@ export default function LoginClient({ registered }: { registered?: string }) {
             name="email"
             type="email"
             placeholder="name@example.com"
+            required
             className="placeholder:text-neutral-500 h-12 rounded-xl border border-neutral-200 bg-white shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500 text-neutral-700"
             value={formData.email}
             onChange={(e) =>
@@ -95,7 +120,9 @@ export default function LoginClient({ registered }: { registered?: string }) {
           />
 
           {errors.email && (
-            <p className="text-xs text-red-500">{errors.email[0]}</p>
+            <p className="text-xs text-red-500 font-medium">
+              {errors.email[0]}
+            </p>
           )}
         </motion.div>
 
@@ -112,22 +139,42 @@ export default function LoginClient({ registered }: { registered?: string }) {
             <Input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
+              required
               className="placeholder:text-neutral-500 h-12 rounded-xl border border-neutral-200 bg-white shadow-sm pr-10 focus-visible:ring-2 focus-visible:ring-emerald-500 text-neutral-700"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
             />
 
-            <Eye className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 cursor-pointer" />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition"
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
           </div>
 
           {errors.password && (
-            <p className="text-xs text-red-500">{errors.password[0]}</p>
+            <p className="text-xs text-red-500 font-medium">
+              {errors.password[0]}
+            </p>
           )}
         </motion.div>
 
         {/* submit */}
         <motion.div variants={item}>
-          <SubmitButton titleButton="Continue account" />
+          <SubmitButton
+            titleButton={isLoading ? "Authenticating..." : "Continue account"}
+            disabled={isLoading}
+          />
         </motion.div>
 
         {/* divider */}

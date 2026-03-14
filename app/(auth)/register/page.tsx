@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { register } from "@/actions/auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { motion, Variants } from "framer-motion";
 import AuthLayout from "@/components/auth/authLayout";
@@ -34,19 +34,49 @@ const item: Variants = {
 };
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    password: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverMessage, setServerMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  async function handleSubmit(data: FormData) {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setIsLoading(true);
     setErrors({});
-    const result = await register(data);
+    setServerMessage("");
 
-    if (result?.error) {
-      setErrors(result.error);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (result.errors) {
+          setErrors(result.errors);
+        } else {
+          setServerMessage(result.message || "Terjadi kesalahan");
+        }
+      } else {
+        router.push("/login?registered=1");
+      }
+    } catch (error) {
+      console.error("Connection error:", error);
+      setServerMessage("Gagal terhubung ke server");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -59,10 +89,15 @@ export default function RegisterPage() {
       href="/login"
     >
       <motion.form
-        action={handleSubmit}
+        onSubmit={handleSubmit}
         variants={container}
         className="space-y-6"
       >
+        {serverMessage && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+            {serverMessage}
+          </div>
+        )}
         {/* name */}
         <motion.div variants={item} className="space-y-2">
           <Label
@@ -125,12 +160,26 @@ export default function RegisterPage() {
             <Input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Create a secure password"
               className="placeholder:text-neutral-500 h-12 rounded-xl border border-neutral-200 bg-white shadow-sm pr-10 focus-visible:ring-2 focus-visible:ring-emerald-500 text-neutral-700"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
             />
 
-            <Eye className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 cursor-pointer" />
+            {showPassword ? (
+              <Eye
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+              />
+            ) : (
+              <EyeOff
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+              />
+            )}
           </div>
 
           {errors.password && (
@@ -140,7 +189,10 @@ export default function RegisterPage() {
 
         {/* submit */}
         <motion.div variants={item}>
-          <SubmitButton titleButton="Create account" />
+          <SubmitButton
+            titleButton={isLoading ? "Processing..." : "Create account"}
+            disabled={isLoading}
+          />
         </motion.div>
 
         {/* divider */}

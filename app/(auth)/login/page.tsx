@@ -1,10 +1,11 @@
 import LoginClient from "./login-client";
 
-export default async function LoginPage({
-  searchParams,
-}: {
+type Props = {
   searchParams: Promise<{ registered?: string }>;
-}) {
-  const params = await searchParams;
-  return <LoginClient registered={params.registered} />;
+};
+
+export default async function LoginPage({ searchParams }: Props) {
+  const { registered } = await searchParams;
+
+  return <LoginClient registered={registered} />;
 }
