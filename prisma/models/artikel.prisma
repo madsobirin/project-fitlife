@@ -6,8 +6,8 @@ model Artikel {
   penulis     String  @default("Admin")
   isi         String  @db.Text
   gambar      String
-  is_featured Boolean @default(false)
-  dibaca      Int     @default(0)
+  is_featured Boolean? @default(false)
+  dibaca      Int?     @default(0)
 
   created_at DateTime? @default(now())
   updated_at DateTime? @updatedAt
