@@ -20,15 +20,20 @@ interface SidebarItem {
 }
 
 const sidebarItems: SidebarItem[] = [
-  { name: "Beranda", label: "Beranda", icon: Home, href: "/beranda" },
+  { name: "Dashboard", label: "Beranda", icon: Home, href: "/admin/dashboard" },
   {
     name: "Menu Sehat",
     label: "Menu Sehat",
     icon: Utensils,
-    href: "/menu",
+    href: "/admin/menu",
   },
-  { name: "Artikel", label: "Artikel", icon: NotebookText, href: "/artikel" },
-  { name: "Pengguna", label: "Pengguna", icon: Users, href: "/pengguna" },
+  {
+    name: "Artikel",
+    label: "Artikel",
+    icon: NotebookText,
+    href: "admin/artikel",
+  },
+  { name: "Pengguna", label: "Pengguna", icon: Users, href: "/admin/artikel" },
 ];
 
 interface SidebarProps {
