@@ -118,8 +118,6 @@ export default function NavProfile() {
           height={size}
           className="object-cover w-full h-full"
           referrerPolicy="no-referrer"
-          // Paksa refresh kalau photo berubah (bukan google CDN)
-          unoptimized={!!user.photo && !user.google_avatar}
         />
       ) : (
         <span style={{ fontSize: size * 0.35 }}>{initials}</span>

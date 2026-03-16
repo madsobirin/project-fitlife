@@ -1,38 +1,36 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
     const userId = cookieStore.get("userId")?.value;
-
-    if (!userId) {
+    if (!userId)
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
 
     const formData = await request.formData();
     const file = formData.get("photo") as File | null;
-
-    if (!file) {
+    if (!file)
       return NextResponse.json(
         { message: "File tidak ditemukan" },
         { status: 400 },
       );
-    }
 
-    // Validasi tipe file
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { message: "Tipe file tidak didukung. Gunakan JPG, PNG, atau WebP" },
+        { message: "Tipe file tidak didukung" },
         { status: 400 },
       );
     }
-
-    // Validasi ukuran (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       return NextResponse.json(
         { message: "Ukuran file maksimal 2MB" },
@@ -40,26 +38,24 @@ export async function POST(request: Request) {
       );
     }
 
+    // Convert file ke base64
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const base64 = `data:${file.type};base64,${Buffer.from(bytes).toString("base64")}`;
 
-    // Buat folder kalau belum ada
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "avatars");
-    await mkdir(uploadDir, { recursive: true });
+    // Upload ke Cloudinary
+    const result = await cloudinary.uploader.upload(base64, {
+      folder: "fitlife/avatars",
+      public_id: `avatar_${userId}`, // overwrite foto lama otomatis
+      overwrite: true,
+      transformation: [
+        { width: 400, height: 400, crop: "fill", gravity: "face" }, // crop fokus ke wajah
+        { quality: "auto", fetch_format: "auto" }, // compress otomatis
+      ],
+    });
 
-    // Nama file unik
-    const ext = file.type.split("/")[1].replace("jpeg", "jpg");
-    const filename = `avatar_${userId}_${Date.now()}.${ext}`;
-    const filepath = path.join(uploadDir, filename);
-
-    await writeFile(filepath, buffer);
-
-    const photoUrl = `/uploads/avatars/${filename}`;
-
-    // Update ke database
     const updated = await prisma.account.update({
       where: { id: parseInt(userId) },
-      data: { photo: photoUrl, updated_at: new Date() },
+      data: { photo: result.secure_url, updated_at: new Date() },
       select: {
         id: true,
         name: true,
@@ -76,7 +72,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(
-      { message: "Foto berhasil diupload", user: updated, photoUrl },
+      { message: "Foto berhasil diupload", user: updated },
       { status: 200 },
     );
   } catch (error) {
