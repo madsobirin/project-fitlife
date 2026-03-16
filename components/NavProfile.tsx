@@ -11,6 +11,7 @@ type UserData = {
   name: string;
   email: string;
   role: string;
+  photo?: string | null; // ← tambah
   google_avatar?: string | null;
 };
 
@@ -74,9 +75,7 @@ export default function NavProfile() {
   if (loading) {
     return (
       <>
-        {/* Desktop skeleton */}
         <div className="hidden md:block w-9 h-9 rounded-full bg-card-dark border border-card-border animate-pulse" />
-        {/* Mobile skeleton */}
         <div className="md:hidden w-full h-14 rounded-2xl bg-card-dark border border-card-border animate-pulse mt-2" />
       </>
     );
@@ -103,19 +102,24 @@ export default function NavProfile() {
         .slice(0, 2)
     : "U";
 
+  // Prioritas: photo upload > google_avatar > initials
+  const avatarSrc = user.photo || user.google_avatar || null;
+
   const AvatarImage = ({ size }: { size: number }) => (
     <div
       style={{ width: size, height: size }}
-      className="rounded-full overflow-hidden border-2 border-primary/40 flex items-center justify-center bg-primary/10 text-primary font-bold text-sm select-none shrink-0"
+      className="rounded-full overflow-hidden border-2 border-primary/40 flex items-center justify-center bg-primary/10 text-primary font-bold select-none shrink-0"
     >
-      {user.google_avatar ? (
+      {avatarSrc ? (
         <Image
-          src={user.google_avatar}
-          alt={user.name}
+          src={avatarSrc}
+          alt={user.name ?? "Avatar"}
           width={size}
           height={size}
           className="object-cover w-full h-full"
           referrerPolicy="no-referrer"
+          // Paksa refresh kalau photo berubah (bukan google CDN)
+          unoptimized={!!user.photo && !user.google_avatar}
         />
       ) : (
         <span style={{ fontSize: size * 0.35 }}>{initials}</span>
@@ -125,7 +129,7 @@ export default function NavProfile() {
 
   return (
     <>
-      {/* ── DESKTOP: dropdown biasa ── */}
+      {/* ── DESKTOP: dropdown ── */}
       <div className="relative hidden md:block" ref={dropdownRef}>
         <button
           onClick={() => setOpen((prev) => !prev)}
@@ -149,7 +153,7 @@ export default function NavProfile() {
 
             <div className="px-4 py-3.5 border-b border-card-border bg-background-base/40">
               <div className="flex items-center gap-3">
-                <AvatarImage size={32} />
+                <AvatarImage size={36} />
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-text-light truncate leading-tight">
                     {user.name}
@@ -210,9 +214,8 @@ export default function NavProfile() {
         )}
       </div>
 
-      {/* ── MOBILE: inline card, tidak pakai dropdown ── */}
+      {/* ── MOBILE: inline card ── */}
       <div className="md:hidden mt-2 border-t border-card-border pt-4">
-        {/* Profile info card */}
         <div className="flex items-center gap-3 px-1 py-2 mb-3">
           <AvatarImage size={44} />
           <div className="min-w-0 flex-1">
@@ -228,7 +231,6 @@ export default function NavProfile() {
           )}
         </div>
 
-        {/* Mobile action buttons */}
         <div className="space-y-1">
           <Link
             href="/profile"
