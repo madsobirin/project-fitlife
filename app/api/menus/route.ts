@@ -59,15 +59,19 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log("BODY DITERIMA:", body); // ← lihat apa yang masuk
 
     const validatedFields = MenuSchema.safeParse(body);
 
     if (!validatedFields.success) {
+      console.log("VALIDATION ERROR:", validatedFields.error.flatten()); // ← lihat error validasi
       return NextResponse.json(
         { errors: validatedFields.error.flatten().fieldErrors },
         { status: 400 },
       );
     }
+
+    console.log("DATA VALID:", validatedFields.data); // ← lihat data setelah validasi
 
     const newMenu = await prisma.menu.create({
       data: validatedFields.data,
@@ -78,7 +82,7 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error: unknown) {
-    console.error("POST_MENU_ERROR", error);
+    console.error("POST_MENU_ERROR DETAIL:", error); // ← lihat error lengkap
     return NextResponse.json(
       { message: "Terjadi kesalahan pada server" },
       { status: 500 },

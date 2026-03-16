@@ -23,6 +23,13 @@ export async function GET() {
         role: true,
         photo: true,
         google_avatar: true,
+        username: true,
+        phone: true,
+        birthdate: true,
+        weight: true,
+        height: true,
+        created_at: true,
+        last_login_at: true,
       },
     });
 

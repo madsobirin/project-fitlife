@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter, useParams } from "next/navigation";
 import LayoutAdmin from "@/components/admin/LayoutAdmin";
 import Image from "next/image";
 import Link from "next/link";
@@ -52,8 +52,10 @@ type FormData = {
 
 type FormErrors = Partial<Record<keyof FormData, string[]>>;
 
-export default function CreateMenuPage() {
+export default function EditMenuPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<FormData>({
@@ -68,31 +70,59 @@ export default function CreateMenuPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  // Upload states
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
+  // Fetch data menu existing
+  const fetchMenu = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/menus/${id}`);
+      if (res.status === 404) {
+        setNotFound(true);
+        return;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        setForm({
+          nama_menu: data.nama_menu ?? "",
+          deskripsi: data.deskripsi ?? "",
+          kalori: data.kalori?.toString() ?? "",
+          target_status: data.target_status ?? "",
+          waktu_memasak: data.waktu_memasak?.toString() ?? "",
+          gambar: data.gambar ?? "",
+        });
+        if (data.gambar) setImagePreview(data.gambar);
+      }
+    } catch {
+      setNotFound(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchMenu();
+  }, [fetchMenu]);
+
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormData]) {
+    if (errors[name as keyof FormData])
       setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
   };
 
-  // ── Upload gambar ke Cloudinary via API ──
   const handleFileSelect = async (file: File) => {
     setUploadError(null);
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowed.includes(file.type)) {
-      setUploadError("Tipe file tidak didukung. Gunakan JPG, PNG, atau WebP");
+      setUploadError("Tipe file tidak didukung");
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
@@ -100,17 +130,15 @@ export default function CreateMenuPage() {
       return;
     }
 
-    // Preview lokal dulu
     const reader = new FileReader();
     reader.onload = (e) => setImagePreview(e.target?.result as string);
     reader.readAsDataURL(file);
 
-    // Upload ke Cloudinary
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", "fitlife/menus");
+      formData.append("folder", "fitlife/menu");
 
       const res = await fetch("/api/upload/menus", {
         method: "POST",
@@ -121,11 +149,10 @@ export default function CreateMenuPage() {
         setForm((prev) => ({ ...prev, gambar: data.url }));
       } else {
         setUploadError(data.message || "Gagal upload gambar");
-        setImagePreview(null);
+        setImagePreview(form.gambar || null);
       }
     } catch {
       setUploadError("Terjadi kesalahan saat upload");
-      setImagePreview(null);
     } finally {
       setUploading(false);
     }
@@ -149,8 +176,8 @@ export default function CreateMenuPage() {
     setErrors({});
     setSaving(true);
     try {
-      const res = await fetch("/api/menus", {
-        method: "POST",
+      const res = await fetch(`/api/menus/${id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nama_menu: form.nama_menu,
@@ -181,10 +208,39 @@ export default function CreateMenuPage() {
 
   const inputClass = (field: keyof FormData) =>
     `w-full px-4 py-2.5 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#22c55e] focus:border-transparent text-sm transition-all outline-none text-gray-800 placeholder:text-gray-400 ${
-      errors[field]
-        ? "border-red-300 bg-red-50 focus:ring-red-400"
-        : "border-gray-200"
+      errors[field] ? "border-red-300 bg-red-50" : "border-gray-200"
     }`;
+
+  if (loading) {
+    return (
+      <LayoutAdmin>
+        <div className="p-8 flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 text-[#22c55e] animate-spin" />
+            <p className="text-gray-500 text-sm">Memuat data menu...</p>
+          </div>
+        </div>
+      </LayoutAdmin>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <LayoutAdmin>
+        <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <p className="text-gray-900 font-bold text-lg">
+            Menu tidak ditemukan
+          </p>
+          <Link
+            href="/admin/menu"
+            className="text-[#22c55e] text-sm font-medium hover:underline"
+          >
+            ← Kembali ke daftar menu
+          </Link>
+        </div>
+      </LayoutAdmin>
+    );
+  }
 
   return (
     <LayoutAdmin>
@@ -198,11 +254,9 @@ export default function CreateMenuPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Tambah Menu Baru
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-900">Edit Menu</h1>
             <p className="text-gray-500 text-sm">
-              Isi detail menu makanan sehat
+              Perbarui detail menu makanan
             </p>
           </div>
         </div>
@@ -210,9 +264,9 @@ export default function CreateMenuPage() {
         <div className="space-y-6">
           {/* ── Upload Gambar ── */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <label className=" text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <ImageIcon className="w-4 h-4 text-[#22c55e]" />
-              Foto Menu <span className="text-red-400">*</span>
+              Foto Menu
             </label>
 
             {imagePreview ? (
@@ -234,17 +288,20 @@ export default function CreateMenuPage() {
                   </div>
                 )}
                 {!uploading && (
-                  <button
-                    onClick={removeImage}
-                    className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-lg shadow border border-gray-200 text-gray-500 hover:text-red-500 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-                {!uploading && form.gambar && (
-                  <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 font-medium">
-                    <Check className="w-3 h-3" /> Berhasil diupload
-                  </div>
+                  <>
+                    <button
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-lg shadow border border-gray-200 text-gray-500 hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-white/90 rounded-lg shadow border border-gray-200 text-gray-600 hover:text-[#22c55e] transition-colors px-2.5 py-1.5 text-xs font-medium"
+                    >
+                      <Upload className="w-3 h-3" /> Ganti Foto
+                    </button>
+                  </>
                 )}
               </div>
             ) : (
@@ -298,7 +355,6 @@ export default function CreateMenuPage() {
               Informasi Menu
             </h2>
 
-            {/* Nama Menu */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                 Nama Menu <span className="text-red-400">*</span>
@@ -317,7 +373,6 @@ export default function CreateMenuPage() {
               )}
             </div>
 
-            {/* Deskripsi */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                 Deskripsi <span className="text-red-400">*</span>
@@ -346,7 +401,6 @@ export default function CreateMenuPage() {
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Kalori */}
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Kalori (kkal) <span className="text-red-400">*</span>
@@ -372,7 +426,6 @@ export default function CreateMenuPage() {
                 )}
               </div>
 
-              {/* Waktu Memasak */}
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Waktu Memasak <span className="text-red-400">*</span>
@@ -400,7 +453,6 @@ export default function CreateMenuPage() {
               </div>
             </div>
 
-            {/* Target Status */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                 <Tag className="w-3.5 h-3.5 inline mr-1" />
@@ -444,7 +496,7 @@ export default function CreateMenuPage() {
             </Link>
             <button
               onClick={handleSubmit}
-              disabled={saving || uploading || !form.gambar}
+              disabled={saving || uploading}
               className="flex-1 sm:flex-none bg-[#22c55e] hover:bg-[#16a34a] disabled:bg-gray-200 disabled:text-gray-400 text-white px-8 py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/20 disabled:shadow-none"
             >
               {saving ? (
@@ -456,7 +508,7 @@ export default function CreateMenuPage() {
                   <Check className="w-4 h-4" /> Tersimpan!
                 </>
               ) : (
-                "Simpan Menu"
+                "Simpan Perubahan"
               )}
             </button>
           </div>

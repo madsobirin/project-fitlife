@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
 import {
   Plus,
   Search,
@@ -6,71 +9,182 @@ import {
   Trash2,
   Clock,
   Activity,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  AlertCircle,
+  X,
+  CheckCircle,
 } from "lucide-react";
 import LayoutAdmin from "@/components/admin/LayoutAdmin";
 import Image from "next/image";
 import Link from "next/link";
 
-interface MenuSehat {
-  id: string;
-  nomor: string;
-  foto: string;
-  nama: string;
-  targetStatus: "Normal" | "Stabil";
-  nutrisi: string;
-  durasi: string;
+type TargetStatus = "Kurus" | "Normal" | "Berlebih" | "Obesitas";
+
+interface Menu {
+  id: number;
+  nama_menu: string;
   deskripsi: string;
+  kalori: number;
+  target_status: TargetStatus;
+  waktu_memasak: number;
+  gambar: string;
+  dibaca: number;
+  created_at: string;
 }
 
-const MENU_DATA: MenuSehat[] = [
-  {
-    id: "1",
-    nomor: "01",
-    foto: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&auto=format&fit=crop&q=60",
-    nama: "Salad Brokoli Segar",
-    targetStatus: "Normal",
-    nutrisi: "230 kkal",
-    durasi: "20 menit",
-    deskripsi: "Salad sehat dengan saus sasa rendah lemak...",
+const STATUS_CONFIG: Record<TargetStatus, { color: string; dot: string }> = {
+  Kurus: {
+    color: "bg-blue-100 text-blue-700 border-blue-200",
+    dot: "bg-blue-500",
   },
-  {
-    id: "2",
-    nomor: "02",
-    foto: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=60",
-    nama: "Buddha Bowl Kacang",
-    targetStatus: "Stabil",
-    nutrisi: "222 kkal",
-    durasi: "222 menit",
-    deskripsi: "Perpaduan sayur dan saus kacang sasa...",
+  Normal: {
+    color: "bg-green-100 text-green-700 border-green-200",
+    dot: "bg-green-500",
   },
-  {
-    id: "3",
-    nomor: "03",
-    foto: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&auto=format&fit=crop&q=60",
-    nama: "Tumis Sawi Bawang",
-    targetStatus: "Stabil",
-    nutrisi: "250 kkal",
-    durasi: "200 menit",
-    deskripsi: "Sawi segar ditumis bumbu sasa alami...",
+  Berlebih: {
+    color: "bg-yellow-100 text-yellow-700 border-yellow-200",
+    dot: "bg-yellow-500",
   },
+  Obesitas: {
+    color: "bg-red-100 text-red-700 border-red-200",
+    dot: "bg-red-500",
+  },
+};
+
+const ITEMS_PER_PAGE = 8;
+const ALL_STATUSES: TargetStatus[] = [
+  "Kurus",
+  "Normal",
+  "Berlebih",
+  "Obesitas",
 ];
 
 export default function MenuPage() {
+  const [menus, setMenus] = useState<Menu[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Search & filter
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState<TargetStatus | "">("");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Delete
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
+
+  // ── Debounce search 400ms ──
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Reset page saat filter berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter]);
+
+  // ── Fetch data ──
+  const fetchMenus = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (activeFilter) params.set("target", activeFilter);
+      const res = await fetch(`/api/menus?${params.toString()}`);
+      if (!res.ok) throw new Error("Gagal mengambil data");
+      const data: Menu[] = await res.json();
+      setMenus(data);
+    } catch {
+      setError("Gagal memuat data menu");
+    } finally {
+      setLoading(false);
+    }
+  }, [activeFilter]);
+
+  useEffect(() => {
+    fetchMenus();
+  }, [fetchMenus]);
+
+  // ── Delete ──
+  const handleDelete = async (id: number) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/menus/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setMenus((prev) => prev.filter((m) => m.id !== id));
+        setDeleteConfirm(null);
+        setDeleteSuccess(true);
+        setTimeout(() => setDeleteSuccess(false), 2500);
+      }
+    } catch {
+      setError("Gagal menghapus menu");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // ── Filter & search client-side ──
+  const filtered = menus.filter((m) => {
+    const matchSearch =
+      debouncedSearch === "" ||
+      m.nama_menu.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      m.deskripsi.toLowerCase().includes(debouncedSearch.toLowerCase());
+    return matchSearch;
+  });
+
+  // ── Pagination ──
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  const getPageNumbers = () => {
+    const pages: (number | "...")[] = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      for (
+        let i = Math.max(2, currentPage - 1);
+        i <= Math.min(totalPages - 1, currentPage + 1);
+        i++
+      ) {
+        pages.push(i);
+      }
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
   return (
     <LayoutAdmin>
       <div className="p-4 md:p-8">
-        {/* Header Section */}
+        {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
               Daftar Menu Sehat
             </h1>
             <p className="text-gray-500 text-sm">
-              Kelola menu makanan harian Anda
+              {loading ? "Memuat..." : `${filtered.length} menu tersedia`}
             </p>
           </div>
           <Link
-            href="/menu/create"
+            href="/admin/menu/create"
             className="w-fit bg-[#22c55e] hover:bg-[#16a34a] text-white px-6 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-green-500/20"
           >
             <Plus className="w-5 h-5" />
@@ -78,185 +192,410 @@ export default function MenuPage() {
           </Link>
         </div>
 
-        {/* Search & Filters Container */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full max-w-md">
+        {/* ── Delete success toast ── */}
+        {deleteSuccess && (
+          <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm font-medium">
+            <CheckCircle className="w-4 h-4" /> Menu berhasil dihapus
+          </div>
+        )}
+
+        {/* ── Error ── */}
+        {error && (
+          <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+            <AlertCircle className="w-4 h-4" /> {error}
+            <button onClick={() => setError(null)} className="ml-auto">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* ── Search & Filter ── */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row items-center gap-3">
+          {/* Search */}
+          <div className="relative w-full">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-              <Search className="h-5 w-5" />
+              <Search className="h-4 w-4" />
             </span>
             <input
-              className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#22c55e] focus:border-transparent text-sm transition-all outline-none"
-              placeholder="Cari menu favorit..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="block w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#22c55e] focus:border-transparent text-sm transition-all outline-none text-slate-700"
+              placeholder="Cari nama menu..."
               type="text"
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 text-gray-600 border border-gray-200 rounded-xl hover:text-[#22c55e] hover:border-[#22c55e] transition-colors w-full sm:w-auto justify-center">
-            <Filter className="w-5 h-5" />
-            <span className="sm:hidden text-sm font-medium">Filter</span>
-          </button>
+
+          {/* Filter dropdown */}
+          <div className="relative w-full sm:w-auto">
+            <button
+              onClick={() => setShowFilterDropdown((p) => !p)}
+              className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium transition-all w-full sm:w-auto justify-center whitespace-nowrap ${
+                activeFilter
+                  ? "bg-[#22c55e] text-white border-[#22c55e] shadow-sm"
+                  : "text-gray-600 border-gray-200 hover:text-[#22c55e] hover:border-[#22c55e] bg-white"
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+              {activeFilter || "Filter Status"}
+              {activeFilter && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveFilter("");
+                  }}
+                  className="ml-1 hover:opacity-70"
+                >
+                  <X className="w-3 h-3" />
+                </span>
+              )}
+            </button>
+
+            {showFilterDropdown && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg z-20 overflow-hidden">
+                <button
+                  onClick={() => {
+                    setActiveFilter("");
+                    setShowFilterDropdown(false);
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                    activeFilter === ""
+                      ? "bg-gray-50 font-semibold text-gray-900"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  Semua Status
+                </button>
+                {ALL_STATUSES.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      setActiveFilter(s);
+                      setShowFilterDropdown(false);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors ${
+                      activeFilter === s
+                        ? "bg-gray-50 font-semibold text-gray-900"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${STATUS_CONFIG[s].dot}`}
+                    />
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* --- Mobile Card View (Tampil hanya di Mobile) --- */}
-        <div className="grid grid-cols-1 gap-4 md:hidden mb-6">
-          {MENU_DATA.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-4"
-            >
-              <div className="flex gap-4">
-                <Image
-                  alt={item.nama}
-                  className="w-20 h-20 object-cover rounded-xl shadow-sm"
-                  src={item.foto}
-                  width={80}
-                  height={80}
-                  unoptimized
-                />
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <span className="text-xs font-mono text-gray-400">
-                      #{item.nomor}
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                        item.targetStatus === "Normal"
-                          ? "bg-green-100 text-green-700 border-green-200"
-                          : "bg-yellow-100 text-yellow-700 border-yellow-200"
-                      }`}
-                    >
-                      {item.targetStatus.toUpperCase()}
-                    </span>
+        {/* ── Loading ── */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-8 h-8 text-[#22c55e] animate-spin" />
+              <p className="text-gray-400 text-sm">Memuat menu...</p>
+            </div>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
+              <Search className="w-7 h-7 text-gray-300" />
+            </div>
+            <p className="text-gray-500 font-medium">
+              Tidak ada menu ditemukan
+            </p>
+            {(search || activeFilter) && (
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setActiveFilter("");
+                }}
+                className="text-[#22c55e] text-sm font-medium hover:underline"
+              >
+                Reset filter
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* ── Mobile Card View ── */}
+            <div className="grid grid-cols-1 gap-4 md:hidden mb-6">
+              {paginated.map((item, i) => (
+                <div
+                  key={item.id}
+                  className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3"
+                >
+                  <div className="flex gap-4">
+                    <Image
+                      alt={item.nama_menu}
+                      className="w-20 h-20 object-cover rounded-xl shadow-sm shrink-0"
+                      src={item.gambar}
+                      width={80}
+                      height={80}
+                      unoptimized
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="text-xs font-mono text-gray-400">
+                          #
+                          {String(
+                            (currentPage - 1) * ITEMS_PER_PAGE + i + 1,
+                          ).padStart(2, "0")}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${STATUS_CONFIG[item.target_status].color}`}
+                        >
+                          {item.target_status.toUpperCase()}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-gray-900 text-sm truncate">
+                        {item.nama_menu}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Activity className="w-3 h-3" /> {item.kalori} kkal
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {item.waktu_memasak}{" "}
+                          menit
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="font-bold text-gray-900 mt-1">{item.nama}</h3>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Activity className="w-3 h-3" /> {item.nutrisi}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {item.durasi}
-                    </span>
+                  <p className="text-xs text-gray-500 line-clamp-2">
+                    {item.deskripsi}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-50">
+                    <Link
+                      href={`/admin/menu/${item.id}/edit`}
+                      className="flex items-center justify-center py-2 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit
+                    </Link>
+                    {deleteConfirm === item.id ? (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          disabled={deletingId === item.id}
+                          className="flex-1 flex items-center justify-center py-2 bg-red-500 text-white rounded-lg text-xs font-semibold"
+                        >
+                          {deletingId === item.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            "Yakin?"
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(null)}
+                          className="flex-1 flex items-center justify-center py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDeleteConfirm(item.id)}
+                        className="flex items-center justify-center py-2 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Hapus
+                      </button>
+                    )}
                   </div>
                 </div>
-              </div>
-              <p className="text-sm text-gray-500 line-clamp-2">
-                {item.deskripsi}
-              </p>
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-50">
-                <button className="flex items-center justify-center py-2 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-semibold">
-                  <Pencil className="w-4 h-4 mr-2" /> Edit
-                </button>
-                <button className="flex items-center justify-center py-2 bg-red-50 text-red-600 rounded-lg text-xs font-semibold">
-                  <Trash2 className="w-4 h-4 mr-2" /> Hapus
-                </button>
+              ))}
+            </div>
+
+            {/* ── Desktop Table View ── */}
+            <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100">
+                      {[
+                        "No",
+                        "Foto",
+                        "Menu",
+                        "Target Status",
+                        "Kalori",
+                        "Durasi",
+                        "Aksi",
+                      ].map((h) => (
+                        <th
+                          key={h}
+                          className={`px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider ${h === "Aksi" ? "text-right" : ""}`}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {paginated.map((item, i) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-gray-50/50 transition-colors"
+                      >
+                        <td className="px-6 py-5 text-sm text-gray-400 font-mono">
+                          {String(
+                            (currentPage - 1) * ITEMS_PER_PAGE + i + 1,
+                          ).padStart(2, "0")}
+                        </td>
+                        <td className="px-6 py-5">
+                          <Image
+                            alt={item.nama_menu}
+                            className="w-16 h-12 object-cover rounded-lg"
+                            src={item.gambar}
+                            width={64}
+                            height={48}
+                            unoptimized
+                          />
+                        </td>
+                        <td className="px-6 py-5">
+                          <p className="font-semibold text-gray-900 text-sm">
+                            {item.nama_menu}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5 line-clamp-1 max-w-xs">
+                            {item.deskripsi}
+                          </p>
+                        </td>
+                        <td className="px-6 py-5">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_CONFIG[item.target_status].color}`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[item.target_status].dot}`}
+                            />
+                            {item.target_status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 text-sm text-gray-600">
+                          <span className="flex items-center gap-1.5">
+                            <Activity className="w-3.5 h-3.5 text-gray-400" />
+                            {item.kalori} kkal
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 text-sm text-gray-600">
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-gray-400" />
+                            {item.waktu_memasak} menit
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              href={`/admin/menu/${item.id}/edit`}
+                              className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                            {deleteConfirm === item.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleDelete(item.id)}
+                                  disabled={deletingId === item.id}
+                                  className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
+                                >
+                                  {deletingId === item.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    "Yakin?"
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => setDeleteConfirm(null)}
+                                  className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors"
+                                >
+                                  Batal
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setDeleteConfirm(item.id)}
+                                className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* --- Desktop Table View (Sembunyi di Mobile) --- */}
-        <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    No
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Foto
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Menu
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Target Status
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Nutrisi
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Durasi
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {MENU_DATA.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-gray-50/50 transition-colors"
+            {/* ── Pagination ── */}
+            {totalPages > 1 && (
+              <div className="mt-6 px-2 sm:px-4 py-4 bg-white border border-gray-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <span className="text-sm text-gray-500 order-2 sm:order-1">
+                  Menampilkan{" "}
+                  <span className="font-semibold text-gray-900">
+                    {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
+                    {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}
+                  </span>{" "}
+                  dari{" "}
+                  <span className="font-semibold text-gray-900">
+                    {filtered.length}
+                  </span>{" "}
+                  menu
+                </span>
+
+                <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-40 transition-all text-gray-600"
                   >
-                    <td className="px-6 py-6 text-sm text-gray-400">
-                      {item.nomor}
-                    </td>
-                    <td className="px-6 py-6">
-                      <Image
-                        alt={item.nama}
-                        className="w-16 h-12 object-cover rounded-lg"
-                        src={item.foto}
-                        width={100}
-                        height={100}
-                        unoptimized
-                      />
-                    </td>
-                    <td className="px-6 py-6 font-semibold text-gray-900">
-                      {item.nama}
-                    </td>
-                    <td className="px-6 py-6">
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  {getPageNumbers().map((page, i) =>
+                    page === "..." ? (
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${
-                          item.targetStatus === "Normal"
-                            ? "bg-green-100 text-green-700 border-green-200"
-                            : "bg-yellow-100 text-yellow-700 border-yellow-200"
+                        key={`dots-${i}`}
+                        className="w-9 h-9 flex items-center justify-center text-gray-400 text-sm"
+                      >
+                        ···
+                      </span>
+                    ) : (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page as number)}
+                        className={`w-9 h-9 flex items-center justify-center text-sm rounded-xl font-medium transition-all ${
+                          currentPage === page
+                            ? "bg-[#22c55e] text-white shadow-md shadow-green-500/20 font-bold"
+                            : "border border-gray-200 bg-white hover:bg-gray-50 text-gray-600"
                         }`}
                       >
-                        {item.targetStatus}
-                      </span>
-                    </td>
-                    <td className="px-6 py-6 text-sm text-gray-600">
-                      {item.nutrisi}
-                    </td>
-                    <td className="px-6 py-6 text-sm text-gray-600">
-                      {item.durasi}
-                    </td>
-                    <td className="px-6 py-6 text-right space-x-2">
-                      <button className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
-                        <Pencil className="h-4 w-4" />
+                        {page}
                       </button>
-                      <button className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    ),
+                  )}
 
-        {/* Pagination Footer */}
-        <div className="mt-6 px-2 sm:px-6 py-4 bg-white md:bg-gray-50 border border-gray-100 md:border-t rounded-2xl md:rounded-none flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-sm text-gray-500 order-2 sm:order-1">
-            Menampilkan{" "}
-            <span className="font-semibold text-gray-900">
-              {MENU_DATA.length}
-            </span>{" "}
-            dari 12 menu
-          </span>
-          <div className="flex gap-2 order-1 sm:order-2 w-full sm:w-auto justify-center">
-            <button className="flex-1 sm:flex-none px-4 py-2 text-xs sm:text-sm border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-50 transition-all">
-              Prev
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center text-sm bg-[#22c55e] text-white rounded-xl font-bold shadow-md shadow-green-500/20">
-              1
-            </button>
-            <button className="flex-1 sm:flex-none px-4 py-2 text-xs sm:text-sm border border-gray-200 rounded-xl bg-white hover:bg-gray-50 transition-all">
-              Next
-            </button>
-          </div>
-        </div>
+                  <button
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="p-2 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-40 transition-all text-gray-600"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </LayoutAdmin>
   );
