@@ -274,7 +274,7 @@ export default function ProfilePage() {
 
           <div className="p-8 flex flex-col sm:flex-row items-center sm:items-end gap-6">
             {/* Avatar */}
-            <div className="relative flex-shrink-0">
+            <div className="relative shrink-0">
               <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-[0_0_30px_rgba(0,255,127,0.2)] flex items-center justify-center bg-background-base text-primary font-black text-2xl">
                 {profile.google_avatar || profile.photo ? (
                   <Image
@@ -315,7 +315,7 @@ export default function ProfilePage() {
 
             {/* BMI Badge */}
             {bmi && bmiCategory && (
-              <div className="flex-shrink-0 text-center bg-background-base/60 border border-card-border rounded-2xl px-5 py-3">
+              <div className="shrink-0 text-center bg-background-base/60 border border-card-border rounded-2xl px-5 py-3">
                 <p className="text-xs text-text-muted uppercase tracking-widest mb-1 font-bold">
                   BMI
                 </p>
