@@ -5,14 +5,20 @@ import { TargetStatus } from "@/generated/prisma/client";
 
 const VALID_TARGET_STATUS = ["Kurus", "Normal", "Berlebih", "Obesitas"];
 
-// GET: Mengambil data menu
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const target = searchParams.get("target");
     const idParam = searchParams.get("id");
 
-    // Validasi target terhadap enum
+    // Pagination — opsional, default ambil semua kalau tidak dikirim
+    const pageParam = searchParams.get("page");
+    const limitParam = searchParams.get("limit");
+    const isPaginated = pageParam !== null || limitParam !== null;
+    const page = parseInt(pageParam || "1");
+    const limit = parseInt(limitParam || "10");
+    const offset = (page - 1) * limit;
+
     if (target && !VALID_TARGET_STATUS.includes(target)) {
       return NextResponse.json(
         {
@@ -23,7 +29,6 @@ export async function GET(request: Request) {
       );
     }
 
-    // Validasi id jika ada
     let idParsed: number | undefined;
     if (idParam) {
       idParsed = parseInt(idParam);
@@ -35,14 +40,43 @@ export async function GET(request: Request) {
       }
     }
 
+    const where = {
+      id: idParsed,
+      target_status: target ? (target as TargetStatus) : undefined,
+    };
+
+    // Kalau pakai pagination → pakai skip/take + count
+    if (isPaginated) {
+      const [menus, total] = await Promise.all([
+        prisma.menu.findMany({
+          where,
+          orderBy: { created_at: "desc" },
+          skip: offset,
+          take: limit,
+        }),
+        prisma.menu.count({ where }),
+      ]);
+
+      return NextResponse.json(
+        {
+          data: menus,
+          meta: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            hasNextPage: page * limit < total,
+            hasPrevPage: page > 1,
+          },
+        },
+        { status: 200 },
+      );
+    }
+
+    // Kalau tidak pakai pagination → return array biasa (backward compatible)
     const menus = await prisma.menu.findMany({
-      where: {
-        id: idParsed,
-        target_status: target ? (target as TargetStatus) : undefined,
-      },
-      orderBy: {
-        created_at: "desc",
-      },
+      where,
+      orderBy: { created_at: "desc" },
     });
 
     return NextResponse.json(menus, { status: 200 });
@@ -55,23 +89,17 @@ export async function GET(request: Request) {
   }
 }
 
-// POST: Menambah menu baru
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    console.log("BODY DITERIMA:", body); // ← lihat apa yang masuk
 
     const validatedFields = MenuSchema.safeParse(body);
-
     if (!validatedFields.success) {
-      console.log("VALIDATION ERROR:", validatedFields.error.flatten()); // ← lihat error validasi
       return NextResponse.json(
         { errors: validatedFields.error.flatten().fieldErrors },
         { status: 400 },
       );
     }
-
-    console.log("DATA VALID:", validatedFields.data); // ← lihat data setelah validasi
 
     const newMenu = await prisma.menu.create({
       data: validatedFields.data,
@@ -82,7 +110,7 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error: unknown) {
-    console.error("POST_MENU_ERROR DETAIL:", error); // ← lihat error lengkap
+    console.error("POST_MENU_ERROR:", error);
     return NextResponse.json(
       { message: "Terjadi kesalahan pada server" },
       { status: 500 },

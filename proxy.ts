@@ -7,7 +7,6 @@ const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // CORS preflight
   if (request.method === "OPTIONS") {
     return new NextResponse(null, {
       status: 200,
@@ -20,7 +19,6 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  // Baca role dari JWT token
   let role: string | undefined;
   let userId: string | undefined;
 
@@ -31,7 +29,7 @@ export async function proxy(request: NextRequest) {
       role = payload.role as string;
       userId = String(payload.userId);
     } catch {
-      // Token invalid/expired — biarkan lanjut, akan 401 di API
+      // Token invalid/expired — akan redirect sesuai kondisi di bawah
     }
   }
 
@@ -49,14 +47,13 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Admin otomatis redirect ke dashboard
+  // Admin redirect ke dashboard
   if (pathname === "/" && role === "admin") {
     return NextResponse.redirect(new URL("/admin/dashboard", request.url));
   }
 
   const response = NextResponse.next();
 
-  // CORS untuk semua API
   if (pathname.startsWith("/api")) {
     response.headers.set("Access-Control-Allow-Origin", "*");
     response.headers.set(

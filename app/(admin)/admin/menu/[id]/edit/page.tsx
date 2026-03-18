@@ -140,7 +140,7 @@ export default function EditMenuPage() {
       formData.append("file", file);
       formData.append("folder", "fitlife/menu");
 
-      const res = await fetch("/api/upload/menus", {
+      const res = await fetch("/api/upload/menu", {
         method: "POST",
         body: formData,
       });

@@ -11,28 +11,64 @@ export async function GET(request: Request) {
     const id = searchParams.get("id") || undefined;
     const slug = searchParams.get("slug") || undefined;
 
-    const idParsed = id ? parseInt(id) : undefined;
-    const finalId = isNaN(idParsed as number) ? undefined : idParsed;
+    // Pagination — opsional
+    const pageParam = searchParams.get("page");
+    const limitParam = searchParams.get("limit");
+    const isPaginated = pageParam !== null || limitParam !== null;
+    const page = parseInt(pageParam || "1");
+    const limit = parseInt(limitParam || "10");
+    const offset = (page - 1) * limit;
 
+    const idParsed = id ? parseInt(id) : undefined;
+    const finalId = idParsed && !isNaN(idParsed) ? idParsed : undefined;
+
+    const where = {
+      id: finalId,
+      slug: slug || undefined,
+      kategori: kategori || undefined,
+      is_featured: searchParams.has("featured") ? featured : undefined,
+    };
+
+    if (isPaginated) {
+      const [artikels, total] = await Promise.all([
+        prisma.artikel.findMany({
+          where,
+          orderBy: { created_at: "desc" },
+          skip: offset,
+          take: limit,
+        }),
+        prisma.artikel.count({ where }),
+      ]);
+
+      return NextResponse.json({
+        data: artikels,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1,
+        },
+      });
+    }
+
+    // Tanpa pagination — backward compatible
     const artikels = await prisma.artikel.findMany({
-      where: {
-        id: finalId,
-        slug: slug || undefined,
-        kategori: kategori || undefined,
-        is_featured: searchParams.has("featured") ? featured : undefined,
-      },
+      where,
       orderBy: { created_at: "desc" },
     });
 
     return NextResponse.json(artikels);
   } catch (error: unknown) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return NextResponse.json(
-          { message: "Gagal mengambil artikel: Artikel tidak ditemukan." },
-          { status: 404 },
-        );
-      }
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { message: "Artikel tidak ditemukan." },
+        { status: 404 },
+      );
     }
     return NextResponse.json(
       { message: "Gagal mengambil artikel" },
@@ -67,13 +103,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newArtikel, { status: 201 });
   } catch (error: unknown) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return NextResponse.json(
-          { message: "Gagal membuat artikel: Artikel tidak ditemukan." },
-          { status: 404 },
-        );
-      }
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { message: "Gagal membuat artikel." },
+        { status: 404 },
+      );
     }
     return NextResponse.json(
       { message: "Gagal membuat artikel" },

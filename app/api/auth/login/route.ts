@@ -68,13 +68,15 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 7,
     });
 
+    cookieStore.delete("userId");
+    cookieStore.delete("role");
+
     // Update last_login_at
     await prisma.account.update({
       where: { id: user.id },
       data: { last_login_at: new Date() },
     });
 
-    // ── Return token juga untuk mobile ──
     return NextResponse.json(
       {
         message: "Login berhasil",

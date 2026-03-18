@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { v2 as cloudinary } from "cloudinary";
+import { getAuthUser } from "@/lib/auth";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -10,9 +10,8 @@ cloudinary.config({
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const userId = cookieStore.get("userId")?.value;
-    if (!userId)
+    const auth = await getAuthUser(request);
+    if (!auth)
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
     const formData = await request.formData();

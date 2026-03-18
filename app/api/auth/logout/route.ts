@@ -6,7 +6,8 @@ export async function POST() {
     const cookieStore = await cookies();
 
     cookieStore.delete("token");
-    // cookieStore.delete("role");
+    cookieStore.delete("userId");
+    cookieStore.delete("role");
 
     return NextResponse.json({ message: "Logout berhasil" }, { status: 200 });
   } catch (error) {
