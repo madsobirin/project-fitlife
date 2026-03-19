@@ -48,8 +48,8 @@ export default function Navbar() {
               Kalkulator BMI
             </Link>
             <Link
-              href="/menu-sehat"
-              className={`text-text-muted hover:text-primary font-medium transition-colors ${pathname === "/menu-sehat" ? "text-primary" : ""}`}
+              href="/menu"
+              className={`text-text-muted hover:text-primary font-medium transition-colors ${pathname === "/menu" ? "text-primary" : ""}`}
             >
               Menu Sehat
             </Link>
