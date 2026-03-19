@@ -1,13 +1,6 @@
 import { faker } from "@faker-js/faker/locale/id_ID";
 import { TargetStatus } from "../../generated/prisma/client";
 
-const TARGET_STATUSES: TargetStatus[] = [
-  "Kurus",
-  "Normal",
-  "Berlebih",
-  "Obesitas",
-];
-
 const MENU_DATA = [
   {
     nama_menu: "Smoothie Pisang Protein",

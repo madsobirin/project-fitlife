@@ -8,7 +8,6 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("🌱 Mulai seeding...\n");
-
   // ── Bersihkan data lama ──
   console.log("🗑️  Menghapus data lama...");
   await prisma.artikel.deleteMany();
