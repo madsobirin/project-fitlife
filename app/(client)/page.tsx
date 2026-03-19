@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
+import HomeRecentContent from "@/components/HomeRecentContent";
 
 export default function Home() {
   return (
@@ -97,7 +98,7 @@ export default function Home() {
                 badan ideal secara instan.
               </p>
               <Link
-                href="#"
+                href="/kalkulator"
                 className="w-full bg-transparent border border-primary text-primary hover:bg-primary hover:text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 group/btn"
               >
                 Lihat Detail
@@ -121,7 +122,7 @@ export default function Home() {
                 disesuaikan untuk diet anda.
               </p>
               <Link
-                href="#"
+                href="/menu"
                 className="w-full bg-transparent border border-primary text-primary hover:bg-primary hover:text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 group/btn"
               >
                 Lihat Detail
@@ -145,7 +146,7 @@ export default function Home() {
                 dan pola makan seimbang.
               </p>
               <Link
-                href="#"
+                href="/artikel"
                 className="w-full bg-transparent border border-primary text-primary hover:bg-primary hover:text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 group/btn"
               >
                 Lihat Detail
@@ -160,7 +161,7 @@ export default function Home() {
       </section>
 
       {/* Recent Content Section */}
-      <section className="py-16 bg-background-base border-t border-card-border">
+      {/* <section className="py-16 bg-background-base border-t border-card-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-card-dark rounded-2xl p-6 shadow-sm border border-card-border">
@@ -200,7 +201,8 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
+      <HomeRecentContent />
 
       {/* CTA Section */}
       <section className="bg-linear-to-r from-card-dark to-background-dark border-t border-card-border py-20 relative overflow-hidden">
