@@ -111,7 +111,7 @@ export default function Navbar() {
               Home
             </Link>
             <Link
-              href="/kalkulator-bmi"
+              href="/kalkulator"
               className="block text-text-muted hover:text-primary font-medium transition-colors py-2"
               onClick={() => setMobileOpen(false)}
             >
