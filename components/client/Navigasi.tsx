@@ -43,7 +43,7 @@ export default function Navbar() {
             </Link>
             <Link
               href="/kalkulator"
-              className={`text-text-muted hover:text-primary font-medium transition-colors ${pathname === "/kalkulator-bmi" ? "text-primary" : ""}`}
+              className={`text-text-muted hover:text-primary font-medium transition-colors ${pathname === "/kalkulator" ? "text-primary" : ""}`}
             >
               Kalkulator BMI
             </Link>
