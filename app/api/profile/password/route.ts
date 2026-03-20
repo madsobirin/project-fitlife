@@ -1,49 +1,72 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
 export async function PATCH(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const userId = cookieStore.get("userId")?.value;
-    if (!userId)
+    const auth = await getAuthUser(request);
+    if (!auth) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-    const { currentPassword, newPassword } = await request.json();
+    const body = await request.json();
+    const { currentPassword, newPassword } = body;
 
-    const user = await prisma.account.findUnique({
-      where: { id: parseInt(userId) },
-      select: { password: true },
-    });
-
-    if (!user?.password) {
+    if (!currentPassword || !newPassword) {
       return NextResponse.json(
-        { message: "Akun ini tidak menggunakan password" },
+        { message: "Password lama dan baru wajib diisi" },
         { status: 400 },
       );
     }
 
-    const match = await bcrypt.compare(currentPassword, user.password);
-    if (!match) {
+    if (newPassword.length < 8) {
       return NextResponse.json(
-        { message: "Password saat ini salah" },
-        { status: 401 },
+        { message: "Password baru minimal 8 karakter" },
+        { status: 400 },
       );
     }
 
-    const hashed = await bcrypt.hash(newPassword, 10);
-    await prisma.account.update({
-      where: { id: parseInt(userId) },
-      data: { password: hashed, updated_at: new Date() },
+    const user = await prisma.account.findUnique({
+      where: { id: auth.userId },
+      select: { id: true, password: true },
     });
 
-    return NextResponse.json(
-      { message: "Password berhasil diubah" },
-      { status: 200 },
-    );
+    if (!user) {
+      return NextResponse.json(
+        { message: "User tidak ditemukan" },
+        { status: 404 },
+      );
+    }
+
+    // User Google login tidak punya password
+    if (!user.password) {
+      return NextResponse.json(
+        { message: "Akun Google tidak bisa mengubah password" },
+        { status: 400 },
+      );
+    }
+
+    // Verifikasi password lama
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
+      return NextResponse.json(
+        { message: "Password saat ini tidak sesuai" },
+        { status: 400 },
+      );
+    }
+
+    // Hash password baru
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await prisma.account.update({
+      where: { id: auth.userId },
+      data: { password: hashedPassword },
+    });
+
+    return NextResponse.json({ message: "Password berhasil diubah" });
   } catch (error) {
-    console.error("PASSWORD_CHANGE_ERROR:", error);
+    console.error("CHANGE_PASSWORD_ERROR:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },
