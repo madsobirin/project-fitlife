@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn, LogOut, User, ChevronDown, ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -23,24 +23,30 @@ export default function NavProfile() {
   const [loggingOut, setLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        } else {
-          setUser(null);
-        }
-      } catch {
+  // Angkat fetchUser ke luar useEffect
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
         setUser(null);
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchUser();
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchUser();
+
+    // Listen event dari ProfilePage setelah upload sukses
+    window.addEventListener("profile:updated", fetchUser);
+    return () => window.removeEventListener("profile:updated", fetchUser);
+  }, [fetchUser]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -102,7 +108,6 @@ export default function NavProfile() {
         .slice(0, 2)
     : "U";
 
-  // Prioritas: photo upload > google_avatar > initials
   const avatarSrc = user.photo || user.google_avatar || null;
 
   const AvatarImage = ({ size }: { size: number }) => (

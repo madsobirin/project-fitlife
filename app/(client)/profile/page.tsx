@@ -219,6 +219,7 @@ export default function ProfilePage() {
         setUploadPreview(null);
         setUploadFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
+        window.dispatchEvent(new CustomEvent("profile:updated")); // ← di sini
       } else {
         setUploadError(data.message || "Gagal mengupload foto");
       }
