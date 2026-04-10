@@ -26,48 +26,7 @@ const QUICK_PROMPTS = [
   { icon: <Heart size={13} />, text: "Olahraga untuk pemula" },
 ];
 
-// Hardcode responses — nanti diganti AI
-const HARDCODE_RESPONSES: Record<string, string> = {
-  default:
-    "Halo! Saya FitBot, asisten kesehatan Anda. Saya siap membantu pertanyaan seputar diet, nutrisi, olahraga, dan gaya hidup sehat. Ada yang bisa saya bantu? 😊",
-  kalori:
-    "Kebutuhan kalori harian bergantung pada beberapa faktor:\n\n• **Berat & tinggi badan** — dasar perhitungan BMR\n• **Usia** — metabolisme melambat seiring usia\n• **Aktivitas fisik** — dari sedentary hingga very active\n\nFormula sederhana untuk estimasi:\n**Pria**: BMR = 88.36 + (13.4 × BB) + (4.8 × TB) - (5.7 × usia)\n**Wanita**: BMR = 447.6 + (9.2 × BB) + (3.1 × TB) - (4.3 × usia)\n\nKemudian kalikan dengan faktor aktivitas (1.2–1.9). Coba Kalkulator BMI kami untuk hasil yang lebih akurat! 💪",
-  menu: "Untuk pemula yang ingin diet sehat, ini rekomendasi menu harian:\n\n🌅 **Sarapan**: Oatmeal + buah + telur rebus\n☀️ **Makan siang**: Nasi merah + ayam panggang + sayur\n🌙 **Makan malam**: Sup bening + tahu/tempe + sayuran\n🍎 **Camilan**: Buah segar, yogurt, atau kacang-kacangan\n\nTips penting:\n• Hindari gorengan dan makanan ultra-proses\n• Minum 8 gelas air putih per hari\n• Jangan skip sarapan!\n\nLihat koleksi menu sehat kami di halaman Menu Sehat 🥗",
-  tips: "Berikut 7 tips hidup sehat yang terbukti efektif:\n\n1. 💧 **Hidrasi** — Minum min. 2L air per hari\n2. 🛌 **Tidur** — 7-9 jam tidur berkualitas\n3. 🏃 **Gerak** — 30 menit aktivitas fisik per hari\n4. 🥗 **Makan seimbang** — Perbanyak sayur & buah\n5. 🧘 **Kelola stres** — Meditasi atau hobi positif\n6. 🚫 **Hindari rokok & alkohol**\n7. 🩺 **Cek kesehatan rutin** — Minimal setahun sekali\n\nMulai dari yang kecil dan konsisten! Konsistensi > Intensitas 🌟",
-  olahraga:
-    "Program olahraga untuk pemula yang aman dan efektif:\n\n**Minggu 1-2** (Adaptasi):\n• Jalan cepat 20 menit × 3x/minggu\n• Peregangan ringan setiap hari\n\n**Minggu 3-4** (Progres):\n• Jalan cepat + jogging ringan 25 menit\n• Push-up, squat, plank — 2 set masing-masing\n\n**Bulan 2+** (Intensifikasi):\n• Kardio 30 menit + latihan beban 3x/minggu\n• Rest day 1-2x/minggu sangat penting!\n\nIngat: **pemanasan 5 menit** sebelum & **pendinginan 5 menit** setelah latihan wajib dilakukan! 💪",
-};
 
-function getResponse(input: string): string {
-  const lower = input.toLowerCase();
-  if (
-    lower.includes("kalori") ||
-    lower.includes("hitung") ||
-    lower.includes("bmr")
-  )
-    return HARDCODE_RESPONSES.kalori;
-  if (
-    lower.includes("menu") ||
-    lower.includes("diet") ||
-    lower.includes("makan") ||
-    lower.includes("resep")
-  )
-    return HARDCODE_RESPONSES.menu;
-  if (
-    lower.includes("tips") ||
-    lower.includes("sehat") ||
-    lower.includes("hidup")
-  )
-    return HARDCODE_RESPONSES.tips;
-  if (
-    lower.includes("olahraga") ||
-    lower.includes("gym") ||
-    lower.includes("latihan") ||
-    lower.includes("gerak")
-  )
-    return HARDCODE_RESPONSES.olahraga;
-  return "Pertanyaan menarik! Saya FitBot siap membantu seputar kesehatan, nutrisi, dan gaya hidup sehat. Bisa Anda perjelas pertanyaannya? Atau coba tanyakan tentang:\n\n• Kebutuhan kalori harian\n• Rekomendasi menu diet\n• Tips hidup sehat\n• Program olahraga pemula 😊";
-}
 
 // Render markdown sederhana
 function renderContent(text: string) {
@@ -109,7 +68,7 @@ export default function ChatPanel({
     {
       id: "welcome",
       role: "assistant",
-      content: HARDCODE_RESPONSES.default,
+      content: "Halo! Saya FitBot, asisten kesehatan Anda. Saya menggunakan AI Gemini untuk membantu pertanyaan seputar diet, nutrisi, olahraga, dan gaya hidup sehat. Ada yang bisa saya bantu? 😊",
       timestamp: new Date(),
     },
   ]);
@@ -143,19 +102,52 @@ export default function ChatPanel({
     setInput("");
     setTyping(true);
 
-    // Simulate typing delay
-    await new Promise((r) => setTimeout(r, 800 + Math.random() * 800));
+    try {
+      const chatHistory = [...messages, userMsg].map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
-    const response = getResponse(content);
-    const botMsg: Message = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content: response,
-      timestamp: new Date(),
-    };
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages: chatHistory }),
+      });
+
+      const data = await res.json();
+      let botResponse = "";
+
+      if (res.ok) {
+        botResponse = data.response;
+      } else {
+        botResponse = `Maaf, terjadi kesalahan: ${data.error || "Gagal menghubungi AI."}`;
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: botResponse,
+          timestamp: new Date(),
+        },
+      ]);
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: "Koneksi terputus. Pastikan internet aktif dan API key Gemini sudah diatur.",
+          timestamp: new Date(),
+        },
+      ]);
+    }
 
     setTyping(false);
-    setMessages((prev) => [...prev, botMsg]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
