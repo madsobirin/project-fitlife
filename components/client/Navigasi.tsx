@@ -21,8 +21,6 @@ export default function Navbar() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  
-
   return (
     <nav className="sticky top-0 z-50 bg-background-base/90 backdrop-blur-md border-b border-card-border transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
