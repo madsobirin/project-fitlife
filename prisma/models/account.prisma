@@ -24,7 +24,8 @@ model Account {
   photo         String?
   google_avatar String?
 
-  perhitungan Perhitungan[]
+  perhitungan     Perhitungan[]
+  lokasiOlahraga  LokasiOlahraga[]
 
   @@map("accounts")
 }

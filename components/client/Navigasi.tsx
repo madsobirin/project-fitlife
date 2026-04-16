@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, Sun, Moon, X } from "lucide-react";
+import { Menu, Sun, Moon, X, MapPin } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -20,8 +20,6 @@ export default function Navbar() {
     });
     return () => cancelAnimationFrame(frame);
   }, []);
-
-  
 
   return (
     <nav className="sticky top-0 z-50 bg-background-base/90 backdrop-blur-md border-b border-card-border transition-colors duration-300">
@@ -60,6 +58,13 @@ export default function Navbar() {
               className={`text-text-muted hover:text-primary font-medium transition-colors ${pathname === "/artikel" ? "text-primary" : ""}`}
             >
               Artikel
+            </Link>
+            <Link
+              href="/lokasi"
+              className={`text-text-muted hover:text-primary font-medium transition-colors flex items-center gap-1 ${pathname === "/lokasi" ? "text-primary" : ""}`}
+            >
+              <MapPin size={14} />
+              Lokasi
             </Link>
           </div>
 
@@ -132,6 +137,13 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
             >
               Artikel
+            </Link>
+            <Link
+              href="/lokasi"
+              className="block text-text-muted hover:text-primary font-medium transition-colors py-2 flex items-center gap-1.5"
+              onClick={() => setMobileOpen(false)}
+            >
+              <MapPin size={14} /> Lokasi Olahraga
             </Link>
             <NavProfile />
           </div>

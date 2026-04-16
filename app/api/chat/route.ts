@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const formattedMessages = messages.map((msg: any) => ({
+    const formattedMessages = messages.map((msg: { role: string; content: string }) => ({
       role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content }],
     }));

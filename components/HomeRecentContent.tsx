@@ -136,7 +136,7 @@ export default function HomeRecentContent() {
                 <span>Menu Sehat Terbaru</span>
               </h3>
               <Link
-                href="/menu-sehat"
+                href="/menu"
                 className="text-primary text-xs sm:text-sm font-semibold hover:text-text-light transition flex items-center gap-1 group shrink-0 ml-2"
               >
                 <span className="hidden sm:inline">Lihat semua</span>
@@ -159,7 +159,7 @@ export default function HomeRecentContent() {
               <div className="flex flex-col flex-1">
                 <div className="space-y-0.5 flex-1">
                   {menuPagination.paginated.map((item) => (
-                    <Link key={item.id} href={`/menu-sehat/${item.slug}`}>
+                    <Link key={item.id} href={`/menu/${item.slug}`}>
                       <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-background-base/60 transition-all group cursor-pointer">
                         {/* Thumbnail */}
                         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 border border-card-border">
