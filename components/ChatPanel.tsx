@@ -73,7 +73,7 @@ export default function ChatPanel({
     {
       id: "welcome",
       role: "assistant",
-      content: "Halo! Saya FitBot, asisten kesehatan Anda. Saya menggunakan AI Gemini untuk membantu pertanyaan seputar diet, nutrisi, olahraga, dan gaya hidup sehat. Ada yang bisa saya bantu? 😊",
+      content: "Halo! Saya FitBot, asisten kesehatan Anda. Saya menggunakan AI Groq untuk membantu pertanyaan seputar diet, nutrisi, olahraga, dan gaya hidup sehat. Ada yang bisa saya bantu? 😊",
       timestamp: new Date(),
     },
   ]);

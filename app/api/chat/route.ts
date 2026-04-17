@@ -1,21 +1,24 @@
 import { NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 2000; // 2 detik, akan naik eksponensial
 const RETRYABLE_STATUSES = [429, 503]; // rate-limit & overload
 
-async function callGeminiWithRetry(
+async function callGroqWithRetry(
   apiKey: string,
   body: object,
 ): Promise<{ data: Record<string, unknown>; status: number }> {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
         body: JSON.stringify(body),
       },
     );
@@ -31,7 +34,7 @@ async function callGeminiWithRetry(
     if (attempt < MAX_RETRIES - 1) {
       const delay = BASE_DELAY_MS * Math.pow(2, attempt); // 2s, 4s, 8s
       console.warn(
-        `Gemini ${response.status} (attempt ${attempt + 1}/${MAX_RETRIES}), retrying in ${delay}ms...`,
+        `Groq ${response.status} (attempt ${attempt + 1}/${MAX_RETRIES}), retrying in ${delay}ms...`,
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
     } else {
@@ -59,48 +62,49 @@ export async function POST(req: Request) {
     }
 
     const { messages } = await req.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY is not set in environment variables" },
+        { error: "GROQ_API_KEY is not set in environment variables" },
         { status: 500 },
       );
     }
 
-    const formattedMessages = messages.map(
-      (msg: { role: string; content: string }) => ({
-        role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: msg.content }],
-      }),
-    );
+    // Format messages untuk Groq (OpenAI-compatible format)
+    const formattedMessages = [
+      {
+        role: "system",
+        content:
+          "Kamu adalah FitBot, asisten kesehatan super cerdas. Kamu ahli nutrisi, diet, dan olahraga. Selalu gunakan sapaan ramah dan gunakan markdown untuk format jawaban. Gunakan bahasa Indonesia. Jangan terlalu kaku, gunakan bahasa yang asik namun informatif.",
+      },
+      ...messages.map((msg: { role: string; content: string }) => ({
+        role: msg.role,
+        content: msg.content,
+      })),
+    ];
 
     const requestBody = {
-      contents: formattedMessages,
-      systemInstruction: {
-        role: "user",
-        parts: [
-          {
-            text: "Kamu adalah FitBot, asisten kesehatan super cerdas. Kamu ahli nutrisi, diet, dan olahraga. Selalu gunakan sapaan ramah dan gunakan markdown untuk format jawaban. Gunakan bahasa Indonesia. Jangan terlalu kaku, gunakan bahasa yang asik namun informatif.",
-          },
-        ],
-      },
+      model: GROQ_MODEL,
+      messages: formattedMessages,
+      temperature: 0.7,
+      max_tokens: 2048,
     };
 
-    const { data, status } = await callGeminiWithRetry(apiKey, requestBody);
+    const { data, status } = await callGroqWithRetry(apiKey, requestBody);
 
     if (status !== 200) {
       const errorMsg =
         (data.error as { message?: string })?.message ||
-        "Gagal mendapatkan respons dari Gemini";
+        "Gagal mendapatkan respons dari Groq";
       return NextResponse.json({ error: errorMsg }, { status });
     }
 
-    const candidates = data.candidates as
-      | { content?: { parts?: { text?: string }[] } }[]
+    const choices = data.choices as
+      | { message?: { content?: string } }[]
       | undefined;
     const botResponse =
-      candidates?.[0]?.content?.parts?.[0]?.text ||
+      choices?.[0]?.message?.content ||
       "Maaf, saya tidak dapat menjawab saat ini.";
 
     return NextResponse.json({ response: botResponse });
