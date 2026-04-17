@@ -10,6 +10,8 @@ import {
   Scale,
   Utensils,
   Heart,
+  RefreshCw,
+  LogIn,
 } from "lucide-react";
 
 type Message = {
@@ -17,6 +19,7 @@ type Message = {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  isError?: boolean;
 };
 
 const QUICK_PROMPTS = [
@@ -60,9 +63,11 @@ function renderContent(text: string) {
 export default function ChatPanel({
   open,
   onClose,
+  isLoggedIn,
 }: {
   open: boolean;
   onClose: () => void;
+  isLoggedIn: boolean;
 }) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -117,23 +122,29 @@ export default function ChatPanel({
       });
 
       const data = await res.json();
-      let botResponse = "";
 
       if (res.ok) {
-        botResponse = data.response;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.response,
+            timestamp: new Date(),
+          },
+        ]);
       } else {
-        botResponse = `Maaf, terjadi kesalahan: ${data.error || "Gagal menghubungi AI."}`;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: "Maaf, server AI sedang sibuk. Silakan coba lagi.",
+            timestamp: new Date(),
+            isError: true,
+          },
+        ]);
       }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: botResponse,
-          timestamp: new Date(),
-        },
-      ]);
     } catch (err) {
       console.error(err);
       setMessages((prev) => [
@@ -141,13 +152,23 @@ export default function ChatPanel({
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: "Koneksi terputus. Pastikan internet aktif dan API key Gemini sudah diatur.",
+          content: "Koneksi terputus. Pastikan internet aktif.",
           timestamp: new Date(),
+          isError: true,
         },
       ]);
     }
 
     setTyping(false);
+  };
+
+  const retryLastMessage = () => {
+    // Hapus pesan error terakhir, ambil pesan user terakhir, lalu kirim ulang
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+    if (!lastUserMsg) return;
+    // Hapus pesan error dari list
+    setMessages((prev) => prev.filter((m) => !m.isError));
+    sendMessage(lastUserMsg.content);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -225,113 +246,147 @@ export default function ChatPanel({
             </div>
           </div>
 
-          {/* ── Messages ── */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin">
-            {messages.map((msg, idx) => (
-              <div
-                key={msg.id}
-                className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
-                style={{
-                  animation: "fadeSlideIn 0.3s ease forwards",
-                  animationDelay: `${idx === messages.length - 1 ? 0 : 0}ms`,
-                }}
+          {/* ── Login Prompt (belum login) ── */}
+          {!isLoggedIn ? (
+            <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+                <LogIn size={28} className="text-primary" />
+              </div>
+              <h3 className="text-sm font-bold text-text-light mb-2">
+                Login Diperlukan
+              </h3>
+              <p className="text-xs text-text-muted leading-relaxed mb-5">
+                Silakan login terlebih dahulu untuk menggunakan FitBot dan mendapatkan saran kesehatan personal.
+              </p>
+              <a
+                href="/login"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-background-dark text-xs font-bold hover:bg-primary-hover transition-all shadow-[0_0_12px_rgba(0,255,127,0.3)] hover:shadow-[0_0_18px_rgba(0,255,127,0.5)]"
               >
-                {/* Avatar */}
-                {msg.role === "assistant" && (
-                  <div className="w-7 h-7 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-1">
-                    <Bot size={14} className="text-primary" />
+                <LogIn size={14} />
+                Login Sekarang
+              </a>
+            </div>
+          ) : (
+            <>
+              {/* ── Messages ── */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin">
+                {messages.map((msg, idx) => (
+                  <div
+                    key={msg.id}
+                    className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+                    style={{
+                      animation: "fadeSlideIn 0.3s ease forwards",
+                      animationDelay: `${idx === messages.length - 1 ? 0 : 0}ms`,
+                    }}
+                  >
+                    {/* Avatar */}
+                    {msg.role === "assistant" && (
+                      <div className="w-7 h-7 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-1">
+                        <Bot size={14} className="text-primary" />
+                      </div>
+                    )}
+
+                    <div
+                      className={`flex flex-col gap-1 max-w-[80%] ${msg.role === "user" ? "items-end" : "items-start"}`}
+                    >
+                      <div
+                        className={`px-4 py-3 rounded-2xl text-xs leading-relaxed ${
+                          msg.role === "user"
+                            ? "bg-primary text-background-dark font-semibold rounded-tr-sm"
+                            : "bg-card-dark border border-card-border text-text-muted rounded-tl-sm"
+                        }`}
+                      >
+                        {msg.role === "assistant" ? (
+                          <div className="space-y-0.5">
+                            {renderContent(msg.content)}
+                            {msg.isError && (
+                              <button
+                                onClick={retryLastMessage}
+                                disabled={typing}
+                                className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/15 border border-primary/30 text-primary text-[11px] font-semibold hover:bg-primary/25 transition-all disabled:opacity-40"
+                              >
+                                <RefreshCw size={11} />
+                                Coba Lagi
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          msg.content
+                        )}
+                      </div>
+                      <span className="text-[10px] text-text-muted/50 px-1">
+                        {formatTime(msg.timestamp)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Typing indicator */}
+                {typing && (
+                  <div className="flex gap-2.5 items-end">
+                    <div className="w-7 h-7 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                      <Bot size={14} className="text-primary" />
+                    </div>
+                    <div className="bg-card-dark border border-card-border px-4 py-3 rounded-2xl rounded-tl-sm">
+                      <div className="flex items-center gap-1">
+                        {[0, 1, 2].map((i) => (
+                          <div
+                            key={i}
+                            className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"
+                            style={{ animationDelay: `${i * 150}ms` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
-                <div
-                  className={`flex flex-col gap-1 max-w-[80%] ${msg.role === "user" ? "items-end" : "items-start"}`}
-                >
-                  <div
-                    className={`px-4 py-3 rounded-2xl text-xs leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-primary text-background-dark font-semibold rounded-tr-sm"
-                        : "bg-card-dark border border-card-border text-text-muted rounded-tl-sm"
-                    }`}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* ── Quick Prompts ── */}
+              {messages.length <= 1 && !typing && (
+                <div className="px-4 pb-2 flex gap-2 flex-wrap shrink-0">
+                  {QUICK_PROMPTS.map((q) => (
+                    <button
+                      key={q.text}
+                      onClick={() => sendMessage(q.text)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card-dark border border-card-border text-text-muted text-[11px] font-semibold hover:border-primary/40 hover:text-primary transition-all"
+                    >
+                      <span className="text-primary">{q.icon}</span>
+                      {q.text}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* ── Input ── */}
+              <div className="px-4 pb-4 pt-2 shrink-0 border-t border-card-border">
+                <div className="flex items-center gap-2 bg-card-dark border border-card-border rounded-2xl px-4 py-2.5 focus-within:border-primary/40 focus-within:shadow-[0_0_0_3px_rgba(0,255,127,0.06)] transition-all">
+                  <input
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Tanya seputar kesehatan..."
+                    disabled={typing}
+                    className="flex-1 bg-transparent text-text-light text-xs placeholder:text-text-muted/50 focus:outline-none disabled:opacity-50"
+                  />
+                  <button
+                    onClick={() => sendMessage()}
+                    disabled={!input.trim() || typing}
+                    className="w-8 h-8 rounded-xl bg-primary text-background-dark flex items-center justify-center hover:bg-primary-hover transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_10px_rgba(0,255,127,0.2)] hover:shadow-[0_0_14px_rgba(0,255,127,0.4)] shrink-0"
                   >
-                    {msg.role === "assistant" ? (
-                      <div className="space-y-0.5">
-                        {renderContent(msg.content)}
-                      </div>
-                    ) : (
-                      msg.content
-                    )}
-                  </div>
-                  <span className="text-[10px] text-text-muted/50 px-1">
-                    {formatTime(msg.timestamp)}
-                  </span>
+                    <Send size={14} />
+                  </button>
                 </div>
+                <p className="text-[10px] text-text-muted/40 text-center mt-2">
+                  FitBot dapat membuat kesalahan. Konsultasikan dokter untuk
+                  diagnosis.
+                </p>
               </div>
-            ))}
-
-            {/* Typing indicator */}
-            {typing && (
-              <div className="flex gap-2.5 items-end">
-                <div className="w-7 h-7 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <Bot size={14} className="text-primary" />
-                </div>
-                <div className="bg-card-dark border border-card-border px-4 py-3 rounded-2xl rounded-tl-sm">
-                  <div className="flex items-center gap-1">
-                    {[0, 1, 2].map((i) => (
-                      <div
-                        key={i}
-                        className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"
-                        style={{ animationDelay: `${i * 150}ms` }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* ── Quick Prompts ── */}
-          {messages.length <= 1 && !typing && (
-            <div className="px-4 pb-2 flex gap-2 flex-wrap shrink-0">
-              {QUICK_PROMPTS.map((q) => (
-                <button
-                  key={q.text}
-                  onClick={() => sendMessage(q.text)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card-dark border border-card-border text-text-muted text-[11px] font-semibold hover:border-primary/40 hover:text-primary transition-all"
-                >
-                  <span className="text-primary">{q.icon}</span>
-                  {q.text}
-                </button>
-              ))}
-            </div>
+            </>
           )}
-
-          {/* ── Input ── */}
-          <div className="px-4 pb-4 pt-2 shrink-0 border-t border-card-border">
-            <div className="flex items-center gap-2 bg-card-dark border border-card-border rounded-2xl px-4 py-2.5 focus-within:border-primary/40 focus-within:shadow-[0_0_0_3px_rgba(0,255,127,0.06)] transition-all">
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Tanya seputar kesehatan..."
-                disabled={typing}
-                className="flex-1 bg-transparent text-text-light text-xs placeholder:text-text-muted/50 focus:outline-none disabled:opacity-50"
-              />
-              <button
-                onClick={() => sendMessage()}
-                disabled={!input.trim() || typing}
-                className="w-8 h-8 rounded-xl bg-primary text-background-dark flex items-center justify-center hover:bg-primary-hover transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_10px_rgba(0,255,127,0.2)] hover:shadow-[0_0_14px_rgba(0,255,127,0.4)] shrink-0"
-              >
-                <Send size={14} />
-              </button>
-            </div>
-            <p className="text-[10px] text-text-muted/40 text-center mt-2">
-              FitBot dapat membuat kesalahan. Konsultasikan dokter untuk
-              diagnosis.
-            </p>
-          </div>
         </div>
       </div>
 

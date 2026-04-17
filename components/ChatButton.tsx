@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircleMore, X } from "lucide-react";
 import ChatPanel from "./ChatPanel";
 
 export default function ChatButton() {
   const [open, setOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => setIsLoggedIn(res.ok))
+      .catch(() => setIsLoggedIn(false));
+  }, []);
 
   return (
     <>
       {/* Panel Chat */}
-      <ChatPanel open={open} onClose={() => setOpen(false)} />
+      <ChatPanel open={open} onClose={() => setOpen(false)} isLoggedIn={isLoggedIn} />
 
       {/* Floating Button */}
       <div className="fixed bottom-6 right-6 z-50">
@@ -43,3 +50,5 @@ export default function ChatButton() {
     </>
   );
 }
+
+
