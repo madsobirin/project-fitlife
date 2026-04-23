@@ -110,7 +110,8 @@ export default function LokasiAdminPage() {
   const useCurrentLocation = () => {
     if ("geolocation" in navigator) navigator.geolocation.getCurrentPosition(
       p => { setFormLat(p.coords.latitude.toFixed(6)); setFormLng(p.coords.longitude.toFixed(6)); },
-      () => setModalError("Gagal mengambil lokasi dari browser")
+      () => setModalError("Gagal mengambil lokasi dari browser"),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
