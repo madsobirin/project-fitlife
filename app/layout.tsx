@@ -12,7 +12,7 @@ const interSans = Inter({
 export const metadata: Metadata = {
   title: "Home - Fitlife.id",
   description:
-    "Platform manajemen diet dan pola makan digital untuk hidup yang lebih sehat",
+    "Platform manajemen diet dan pola makan digital untuk hidup yang lebih sehatt",
 };
 
 export default function RootLayout({
