@@ -47,19 +47,24 @@ function GoogleAuthButton() {
         const result = await response.json();
 
         if (response.ok) {
-          toast.success("Login Google Berhasil!");
+          toast.success("Login Google Berhasil!", {
+            duration: 2000,
+            closeButton: true,
+          });
           router.push("/");
           router.refresh();
         } else {
-          toast.error(result.message || "Gagal autentikasi Google.");
+          toast.error(result.message || "Gagal autentikasi Google.", {
+            duration: 2000,
+          });
         }
       } catch {
-        toast.error("Terjadi kesalahan koneksi ke server.");
+        toast.error("Terjadi kesalahan koneksi ke server.", { duration: 2000 });
       } finally {
         setIsGoogleLoading(false);
       }
     },
-    onError: () => toast.error("Login Google dibatalkan."),
+    onError: () => toast.error("Login Google dibatalkan.", { duration: 2000 }),
   });
 
   return (
@@ -107,12 +112,12 @@ export default function LoginClient({ registered }: { registered?: string }) {
           );
         }
       } else {
-        toast.success("Login Berhasil!");
+        toast.success("Login Berhasil!", { duration: 2000, closeButton: true });
         router.push("/");
         router.refresh();
       }
     } catch {
-      toast.error("Gagal terhubung ke server.");
+      toast.error("Gagal terhubung ke server.", { duration: 2000 });
     } finally {
       setIsLoading(false);
     }
