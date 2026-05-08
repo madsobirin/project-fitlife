@@ -361,16 +361,16 @@ export default function KalkulatorBMIPage() {
                   <div
                     className={`inline-block bg-background-base border ${statusCfg!.border} rounded-2xl px-6 py-5 mb-4 w-full`}
                   >
-                    <p
-                      className={`text-4xl font-black ${statusCfg!.color} mb-2`}
-                    >
-                      BMI: {result.bmi}
-                    </p>
                     <span
-                      className={`inline-block px-4 py-1 rounded-full text-sm font-black ${statusCfg!.bg} ${statusCfg!.color} border ${statusCfg!.border}`}
+                      className={`inline-block px-4 py-1 rounded-full text-2xl font-black ${statusCfg!.bg} ${statusCfg!.color} border ${statusCfg!.border}`}
                     >
                       {result.status}
                     </span>
+                    <p
+                      className={`text-sm font-black ${statusCfg!.color} mb-2`}
+                    >
+                      BMI: {result.bmi}
+                    </p>
                   </div>
                   <p className="text-text-muted text-sm leading-relaxed">
                     Berdasarkan profil Anda, silakan cek rekomendasi menu dan
@@ -378,16 +378,16 @@ export default function KalkulatorBMIPage() {
                   </p>
                 </div>
               ) : (
-                <div className="text-center py-6">
+                <div className="text-center">
                   <div className="inline-block bg-background-base border border-card-border rounded-2xl px-6 py-5 mb-4 w-full">
-                    <p className="text-4xl font-black text-primary mb-2">
-                      BMI: {previewBMI}
-                    </p>
                     <span
-                      className={`inline-block px-4 py-1 rounded-full text-sm font-black ${STATUS_CONFIG[previewStatus].bg} ${STATUS_CONFIG[previewStatus].color} border ${STATUS_CONFIG[previewStatus].border}`}
+                      className={`inline-block px-4 py-1 rounded-full text-2xl font-black ${STATUS_CONFIG[previewStatus].bg} ${STATUS_CONFIG[previewStatus].color} border ${STATUS_CONFIG[previewStatus].border}`}
                     >
                       {previewStatus}
                     </span>
+                    <p className="text-sm font-black text-primary mb-2">
+                      BMI: {previewBMI}
+                    </p>
                   </div>
                   <p className="text-text-muted text-sm">
                     Geser slider lalu tekan tombol hitung untuk menyimpan hasil.
