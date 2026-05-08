@@ -29,8 +29,6 @@ const QUICK_PROMPTS = [
   { icon: <Heart size={13} />, text: "Olahraga untuk pemula" },
 ];
 
-
-
 // Render markdown sederhana
 function renderContent(text: string) {
   const lines = text.split("\n");
@@ -73,7 +71,8 @@ export default function ChatPanel({
     {
       id: "welcome",
       role: "assistant",
-      content: "Halo! Saya FitBot, asisten kesehatan Anda. Saya menggunakan AI Groq untuk membantu pertanyaan seputar diet, nutrisi, olahraga, dan gaya hidup sehat. Ada yang bisa saya bantu? 😊",
+      content:
+        "Halo! Saya FitBot, asisten kesehatan Anda. Saya menggunakan AI Groq untuk membantu pertanyaan seputar diet, nutrisi, olahraga, dan gaya hidup sehat. Ada yang bisa saya bantu? 😊",
       timestamp: new Date(),
     },
   ]);
@@ -248,7 +247,7 @@ export default function ChatPanel({
 
           {/* ── Login Prompt (belum login) ── */}
           {!isLoggedIn ? (
-            <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 text-center">
+            <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 text-center bg-accent">
               <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
                 <LogIn size={28} className="text-primary" />
               </div>
@@ -256,7 +255,8 @@ export default function ChatPanel({
                 Login Diperlukan
               </h3>
               <p className="text-xs text-text-muted leading-relaxed mb-5">
-                Silakan login terlebih dahulu untuk menggunakan FitBot dan mendapatkan saran kesehatan personal.
+                Silakan login terlebih dahulu untuk menggunakan FitBot dan
+                mendapatkan saran kesehatan personal.
               </p>
               <a
                 href="/login"
@@ -269,7 +269,7 @@ export default function ChatPanel({
           ) : (
             <>
               {/* ── Messages ── */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin">
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin bg-accent">
                 {messages.map((msg, idx) => (
                   <div
                     key={msg.id}
@@ -346,7 +346,7 @@ export default function ChatPanel({
 
               {/* ── Quick Prompts ── */}
               {messages.length <= 1 && !typing && (
-                <div className="px-4 pb-2 flex gap-2 flex-wrap shrink-0">
+                <div className="px-4 pb-2 flex gap-2 flex-wrap shrink-0 bg-accent">
                   {QUICK_PROMPTS.map((q) => (
                     <button
                       key={q.text}
@@ -361,8 +361,8 @@ export default function ChatPanel({
               )}
 
               {/* ── Input ── */}
-              <div className="px-4 pb-4 pt-2 shrink-0 border-t border-card-border">
-                <div className="flex items-center gap-2 bg-card-dark border border-card-border rounded-2xl px-4 py-2.5 focus-within:border-primary/40 focus-within:shadow-[0_0_0_3px_rgba(0,255,127,0.06)] transition-all">
+              <div className="px-4 pb-4 pt-2 shrink-0 border-t border-card-border bg-accent">
+                <div className="flex items-center gap-2 bg-card-dark border border-green-400 rounded-2xl px-4 py-2.5 focus-within:border-primary/40 focus-within:shadow-[0_0_0_3px_rgba(0,255,127,0.06)] transition-all">
                   <input
                     ref={inputRef}
                     value={input}
@@ -370,7 +370,7 @@ export default function ChatPanel({
                     onKeyDown={handleKeyDown}
                     placeholder="Tanya seputar kesehatan..."
                     disabled={typing}
-                    className="flex-1 bg-transparent text-text-light text-xs placeholder:text-text-muted/50 focus:outline-none disabled:opacity-50"
+                    className="flex-1 text-text-light text-xs placeholder:text-text-muted/50 focus:outline-none disabled:opacity-50"
                   />
                   <button
                     onClick={() => sendMessage()}

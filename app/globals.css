@@ -16,6 +16,7 @@
   --radius: 0.5rem;
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
+  --color-accent-2: #265140;
 }
 
 @theme inline {
@@ -113,6 +114,7 @@
 
   /* Borders & inputs */
   --border: #0d422e;
+  --border-2: #2b61d4;
   --input: rgba(255, 255, 255, 0.1);
   --ring: #00ff7f;
 
