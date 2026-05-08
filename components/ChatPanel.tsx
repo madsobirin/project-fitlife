@@ -72,7 +72,7 @@ export default function ChatPanel({
       id: "welcome",
       role: "assistant",
       content:
-        "Halo! Saya FitBot, asisten kesehatan Anda. Saya menggunakan AI Groq untuk membantu pertanyaan seputar diet, nutrisi, olahraga, dan gaya hidup sehat. Ada yang bisa saya bantu? 😊",
+        "Halo! Saya FitBot, asisten kesehatan Anda. Saya siap untuk membantu pertanyaan seputar diet, nutrisi, olahraga, dan gaya hidup sehat. Ada yang bisa saya bantu? 😊",
       timestamp: new Date(),
     },
   ]);
@@ -332,7 +332,7 @@ export default function ChatPanel({
                         {[0, 1, 2].map((i) => (
                           <div
                             key={i}
-                            className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"
+                            className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce "
                             style={{ animationDelay: `${i * 150}ms` }}
                           />
                         ))}
