@@ -140,7 +140,7 @@ export default function CreateArtikelPage() {
 
   return (
     <LayoutAdmin>
-      <div className="p-4 md:p-8 max-w-3xl mx-auto">
+      <div className="p-4 md:p-8 mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Link
