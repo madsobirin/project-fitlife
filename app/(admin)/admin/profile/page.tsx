@@ -333,7 +333,7 @@ export default function AdminProfilePage() {
 
   return (
     <LayoutAdmin>
-      <div className="p-4 md:p-8 max-w-3xl mx-auto">
+      <div className="p-4 md:p-8 max-w-7xl mx-auto">
         {/* ── Header Card ── */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
           {/* Top accent */}

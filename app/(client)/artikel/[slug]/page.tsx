@@ -123,7 +123,7 @@ export default function ArtikelDetailPage() {
 
         <button
           onClick={() => router.back()}
-          className="absolute top-6 left-6 flex items-center gap-2 bg-background-dark/70 backdrop-blur-sm border border-card-border text-text-light px-4 py-2 rounded-xl text-sm font-semibold hover:border-primary/50 hover:text-primary transition-all"
+          className="absolute top-6 left-6 flex items-center gap-2 bg-background-dark/70 backdrop-blur-sm dark:bg-card dark:backdrop-blur-none border border-card-border text-text-light px-4 py-2 rounded-xl text-sm font-semibold hover:border-primary/50 hover:text-primary transition-all shadow-sm"
         >
           <ArrowLeft size={16} /> Kembali
         </button>
@@ -135,7 +135,7 @@ export default function ArtikelDetailPage() {
         )}
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-16 relative z-10 pb-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-10 relative z-10 pb-20 ">
         {/* ── Article Card ── */}
         <div className="bg-card-dark border border-card-border rounded-3xl overflow-hidden shadow-2xl">
           <div className="h-1 w-full bg-linear-to-r from-transparent via-primary/60 to-transparent" />

@@ -37,7 +37,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-text-muted">
               <li>
                 <Link
-                  href="#"
+                  href="/"
                   className="hover:text-primary transition flex items-center gap-2"
                 >
                   <Home size={16} /> Home
@@ -45,7 +45,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/kalkulator"
                   className="hover:text-primary transition flex items-center gap-2"
                 >
                   <Scale size={16} /> Kalkulator BMI
@@ -53,7 +53,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/menu"
                   className="hover:text-primary transition flex items-center gap-2"
                 >
                   <Utensils size={16} /> Menu Sehat
@@ -61,10 +61,18 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/artikel"
                   className="hover:text-primary transition flex items-center gap-2"
                 >
                   <FileText size={16} /> Artikel
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/lokasi"
+                  className="hover:text-primary transition flex items-center gap-2"
+                >
+                  <MapPin size={16} /> Lokasi Gym
                 </Link>
               </li>
             </ul>
