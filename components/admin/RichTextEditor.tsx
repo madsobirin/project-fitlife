@@ -103,7 +103,7 @@ export default function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none min-h-[280px] px-4 py-3 focus:outline-none text-gray-800",
+          "prose admin-prose prose-sm max-w-none min-h-[280px] px-4 py-3 focus:outline-none text-gray-800",
       },
     },
     onUpdate: ({ editor }) => {
@@ -335,7 +335,7 @@ export default function RichTextEditor({
         ) : (
           /* Preview — render HTML dari editor */
           <div
-            className="prose prose-sm max-w-none px-4 py-3 min-h-[280px] text-gray-800 preview-content"
+            className="prose admin-prose prose-sm max-w-none px-4 py-3 min-h-[280px] text-gray-800 preview-content"
             dangerouslySetInnerHTML={{ __html: editor.getHTML() }}
           />
         )}

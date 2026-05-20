@@ -176,7 +176,7 @@ export default function ArtikelDetailPage() {
 
             {/* Content */}
             <div
-              className="artikel-content text-text-muted leading-relaxed"
+              className="prose prose-headings:font-bold prose-strong:font-bold prose-a:text-[#22c55e] text-text-muted leading-relaxed dark:prose-headings:text-[var(--foreground)] dark:prose-strong:text-[var(--foreground)]"
               dangerouslySetInnerHTML={{ __html: artikel.isi }}
             />
           </div>
