@@ -342,7 +342,7 @@ export default function EditLokasiPage() {
           <div className="lg:col-span-7 bg-white border border-gray-100 rounded-3xl p-4 shadow-sm space-y-4">
             <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2 border-b border-gray-50 pb-3 px-2">
               <Map className="w-4 h-4 text-[#22c55e]" />
-              Peta Satelit HD Interaktif
+              Maps
             </h2>
             <div className="p-1">
               <LokasiPickerMap

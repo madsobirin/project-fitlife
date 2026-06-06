@@ -57,6 +57,7 @@ export default function LokasiPickerMap({ lat, lng, onChange, height }: Props) {
       center: [initialLat, initialLng],
       zoom: 13,
       zoomControl: false,
+      attributionControl: false,
     });
 
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
