@@ -1,11 +1,21 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import dynamic from "next/dynamic";
 import {
   Plus, Search, Trash2, MapPin, Loader2, AlertCircle, X, CheckCircle, Locate,
   ChevronLeft, ChevronRight, Pencil,
 } from "lucide-react";
 import LayoutAdmin from "@/components/admin/LayoutAdmin";
+
+const LokasiPickerMap = dynamic(() => import("@/components/admin/LokasiPickerMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[220px] flex items-center justify-center bg-gray-50 border border-gray-100 rounded-2xl">
+      <Loader2 className="w-6 h-6 text-[#22c55e] animate-spin" />
+    </div>
+  ),
+});
 
 interface Lokasi {
   id: number;
@@ -180,11 +190,23 @@ export default function LokasiAdminPage() {
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Koordinat</label>
                     <button type="button" onClick={useCurrentLocation} className="flex items-center gap-1 text-[#22c55e] text-xs font-semibold hover:underline"><Locate className="w-3.5 h-3.5" /> Gunakan lokasi saya</button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 mb-3">
                     <input value={formLat} onChange={e => setFormLat(e.target.value)} placeholder="Latitude" type="number" step="any" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#22c55e] focus:border-transparent text-sm transition-all" />
                     <input value={formLng} onChange={e => setFormLng(e.target.value)} placeholder="Longitude" type="number" step="any" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#22c55e] focus:border-transparent text-sm transition-all" />
                   </div>
-                  <p className="text-[10px] text-gray-400 mt-1">Opsional. Isi manual atau ambil dari lokasi saat ini.</p>
+                  <div className="mb-2">
+                    <LokasiPickerMap
+                      lat={formLat}
+                      lng={formLng}
+                      onChange={(newLat, newLng, address) => {
+                        setFormLat(newLat);
+                        setFormLng(newLng);
+                        if (address) {
+                          setFormAddress(address);
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
                 {modalError && <div className="px-4 py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" /> {modalError}</div>}
                 {modalSuccess && <div className="px-4 py-2.5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-xs font-medium flex items-center gap-2"><CheckCircle className="w-4 h-4 shrink-0" /> {modalSuccess}</div>}
