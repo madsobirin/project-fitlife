@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 interface SidebarItem {
@@ -90,9 +91,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         {/* Logo */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
+            {/* <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30"> */}
+            {/* <Zap className="w-5 h-5 text-white" /> */}
+            <Image src="/logo.png" alt="logo" width={40} height={40} />
+            {/* </div> */}
             <span className="text-xl font-bold text-slate-800 tracking-tight">
               Fit<span className="text-emerald-500">Life</span>.id
             </span>
