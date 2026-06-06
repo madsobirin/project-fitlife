@@ -11,3 +11,6 @@ ignoredBuiltDependencies:
   - prisma
   - sharp
   - unrs-resolver
+
+overrides:
+  '@tiptap/pm': 3.22.3
