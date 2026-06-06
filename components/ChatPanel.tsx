@@ -185,14 +185,14 @@ export default function ChatPanel({
       {/* Backdrop mobile */}
       {open && (
         <div
-          className="fixed inset-0 bg-background-dark/40 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-background-dark/40 backdrop-blur-sm z-1040 md:hidden"
           onClick={onClose}
         />
       )}
 
       {/* Panel */}
       <div
-        className={`fixed z-40 transition-all duration-300 ease-out
+        className={`fixed z-1050 transition-all duration-300 ease-out
           bottom-24 right-6
           w-[calc(100vw-3rem)] max-w-[400px]
           md:bottom-24 md:right-6 md:w-[400px]
