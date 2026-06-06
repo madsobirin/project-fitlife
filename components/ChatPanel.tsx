@@ -23,10 +23,10 @@ type Message = {
 };
 
 const QUICK_PROMPTS = [
-  { icon: <Scale size={13} />, text: "Hitung kalori harian saya" },
-  { icon: <Utensils size={13} />, text: "Menu diet untuk pemula" },
-  { icon: <Leaf size={13} />, text: "Tips hidup lebih sehat" },
-  { icon: <Heart size={13} />, text: "Olahraga untuk pemula" },
+  { icon: <Scale size={13} />, text: "Cek tinggi & berat badan" },
+  { icon: <Heart size={13} />, text: "Status BMI terakhir" },
+  { icon: <Sparkles size={13} />, text: "Hitung kalori harian" },
+  { icon: <Utensils size={13} />, text: "Rekomendasi menu diet" },
 ];
 
 // Render markdown sederhana
@@ -345,16 +345,16 @@ export default function ChatPanel({
               </div>
 
               {/* ── Quick Prompts ── */}
-              {messages.length <= 1 && !typing && (
-                <div className="px-4 pb-2 flex gap-2 flex-wrap shrink-0 bg-accent">
+              {!typing && (
+                <div className="px-4 pb-2 grid grid-cols-2 gap-2 shrink-0 bg-accent">
                   {QUICK_PROMPTS.map((q) => (
                     <button
                       key={q.text}
                       onClick={() => sendMessage(q.text)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card-dark border border-card-border text-text-muted text-[11px] font-semibold hover:border-primary/40 hover:text-primary transition-all"
+                      className="flex items-start text-left gap-1.5 px-3 py-2 rounded-xl bg-card-dark border border-card-border text-text-muted text-[11px] font-semibold hover:border-primary/40 hover:text-primary transition-all"
                     >
-                      <span className="text-primary">{q.icon}</span>
-                      {q.text}
+                      <span className="text-primary mt-0.5">{q.icon}</span>
+                      <span>{q.text}</span>
                     </button>
                   ))}
                 </div>
