@@ -107,7 +107,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   );
 
   return (
-    <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10">
+    <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 sticky top-0 z-[1010]">
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}

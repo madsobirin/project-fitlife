@@ -22,7 +22,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="sticky top-0 z-50 bg-background-base/90 backdrop-blur-md border-b border-card-border transition-colors duration-300">
+    <nav className="sticky top-0 z-1010 bg-background-base/90 backdrop-blur-md border-b border-card-border transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Brand Logo */}
@@ -63,7 +63,7 @@ export default function Navbar() {
               href="/lokasi"
               className={`text-text-muted hover:text-primary font-medium transition-colors flex items-center gap-1 ${pathname === "/lokasi" ? "text-primary" : ""}`}
             >
-              <MapPin size={14} />
+              {/* <MapPin size={14} /> */}
               Lokasi
             </Link>
           </div>
