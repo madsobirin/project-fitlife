@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import {
   Plus, Search, Trash2, MapPin, Loader2, AlertCircle, X, CheckCircle, Locate,
   ChevronLeft, ChevronRight, Pencil,
@@ -79,7 +80,6 @@ export default function LokasiAdminPage() {
     return () => document.removeEventListener("mousedown", h);
   }, [showModal]);
 
-  const openAdd = () => { setEditingId(null); setFormName(""); setFormAddress(""); setFormLat(""); setFormLng(""); setModalError(""); setModalSuccess(""); setShowModal(true); };
 
   const openEdit = (loc: Lokasi) => {
     setEditingId(loc.id); setFormName(loc.name); setFormAddress(loc.address || "");
@@ -150,9 +150,9 @@ export default function LokasiAdminPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Daftar Lokasi Olahraga</h1>
             <p className="text-gray-500 text-sm">{loading ? "Memuat..." : `${locations.length} lokasi tersedia`}</p>
           </div>
-          <button onClick={openAdd} className="w-fit bg-[#22c55e] hover:bg-[#16a34a] text-white px-6 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-green-500/20">
+          <Link href="/admin/lokasi/create" className="w-fit bg-[#22c55e] hover:bg-[#16a34a] text-white px-6 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-green-500/20">
             <Plus className="w-5 h-5" /> Tambah Lokasi
-          </button>
+          </Link>
         </div>
 
         {/* Toasts */}

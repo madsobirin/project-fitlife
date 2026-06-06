@@ -9,6 +9,7 @@ interface Props {
   lat: string;
   lng: string;
   onChange: (lat: string, lng: string, address?: string) => void;
+  height?: string;
 }
 
 interface SearchResult {
@@ -25,7 +26,7 @@ interface SearchResult {
   importance: number;
 }
 
-export default function LokasiPickerMap({ lat, lng, onChange }: Props) {
+export default function LokasiPickerMap({ lat, lng, onChange, height }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
@@ -265,8 +266,8 @@ export default function LokasiPickerMap({ lat, lng, onChange }: Props) {
       {/* Map Container */}
       <div 
         ref={containerRef} 
-        className="w-full h-[220px] rounded-2xl overflow-hidden border border-gray-100 relative z-10"
-        style={{ minHeight: "220px" }}
+        className="w-full rounded-2xl overflow-hidden border border-gray-100 relative z-10"
+        style={{ height: height || "220px", minHeight: height || "220px" }}
       />
       
       <p className="text-[10px] text-gray-400">
