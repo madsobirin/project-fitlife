@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import LayoutAdmin from "@/components/admin/LayoutAdmin";
 import {
@@ -33,8 +33,14 @@ const LokasiPickerMap = dynamic(
   },
 );
 
-export default function CreateLokasiPage() {
+export default function EditLokasiPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
+
+  // Loading states
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   // Form states
   const [formName, setFormName] = useState("");
@@ -45,6 +51,37 @@ export default function CreateLokasiPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Fetch existing location details
+  const fetchLocation = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setNotFound(false);
+    try {
+      const res = await fetch(`/api/lokasi-olahraga/${id}`);
+      if (res.status === 404) {
+        setNotFound(true);
+        return;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        setFormName(data.name || "");
+        setFormAddress(data.address || "");
+        setFormLat(data.latitude?.toString() || "");
+        setFormLng(data.longitude?.toString() || "");
+      } else {
+        setErrors({ general: "Gagal memuat detail lokasi." });
+      }
+    } catch {
+      setErrors({ general: "Terjadi kesalahan saat memuat data lokasi." });
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchLocation();
+  }, [fetchLocation]);
 
   const useCurrentLocation = () => {
     setErrors((p) => ({ ...p, general: "" }));
@@ -90,20 +127,20 @@ export default function CreateLokasiPage() {
         name: formName.trim(),
       };
       if (formAddress.trim()) body.address = formAddress.trim();
-      if (formLat && formLng) {
-        body.latitude = parseFloat(formLat);
-        body.longitude = parseFloat(formLng);
-      }
+      body.latitude = formLat ? parseFloat(formLat) : null;
+      body.longitude = formLng ? parseFloat(formLng) : null;
 
-      const res = await fetch("/api/lokasi-olahraga", {
-        method: "POST",
+      const res = await fetch(`/api/lokasi-olahraga/${id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
       if (!res.ok) {
         const d = await res.json();
-        setErrors({ general: d.message || "Gagal menyimpan lokasi." });
+        setErrors({
+          general: d.message || "Gagal menyimpan perubahan lokasi.",
+        });
         return;
       }
 
@@ -118,6 +155,38 @@ export default function CreateLokasiPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <LayoutAdmin>
+        <div className="p-8 flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 text-[#22c55e] animate-spin" />
+            <p className="text-gray-500 text-sm">Memuat data lokasi...</p>
+          </div>
+        </div>
+      </LayoutAdmin>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <LayoutAdmin>
+        <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <AlertCircle className="w-12 h-12 text-red-500" />
+          <p className="text-gray-900 font-bold text-lg">
+            Lokasi tidak ditemukan
+          </p>
+          <Link
+            href="/admin/lokasi"
+            className="text-[#22c55e] text-sm font-semibold hover:underline flex items-center gap-1"
+          >
+            ← Kembali ke daftar lokasi
+          </Link>
+        </div>
+      </LayoutAdmin>
+    );
+  }
+
   return (
     <LayoutAdmin>
       <div className="p-4 md:p-8 max-w-8xl mx-auto">
@@ -131,10 +200,11 @@ export default function CreateLokasiPage() {
           </Link>
           <div>
             <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
-              Tambah Lokasi Baru
+              Edit Lokasi
             </h1>
             <p className="text-gray-500 text-sm">
-              Buat data tempat olahraga baru dengan penanda peta satelit HD
+              Ubah data lokasi olahraga dan sesuaikan posisinya di peta satelit
+              HD
             </p>
           </div>
         </div>
@@ -240,7 +310,7 @@ export default function CreateLokasiPage() {
             {success && (
               <div className="px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-xs font-semibold flex items-center gap-2">
                 <Check className="w-4 h-4 shrink-0" />
-                Lokasi berhasil disimpan! Mengalihkan...
+                Perubahan berhasil disimpan! Mengalihkan...
               </div>
             )}
 
@@ -262,7 +332,7 @@ export default function CreateLokasiPage() {
                 ) : success ? (
                   <Check className="w-4 h-4" />
                 ) : (
-                  "Simpan Lokasi"
+                  "Simpan Perubahan"
                 )}
               </button>
             </div>

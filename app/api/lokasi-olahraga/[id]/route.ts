@@ -10,6 +10,40 @@ const LokasiSchema = z.object({
   longitude: z.number().min(-180).max(180).optional().nullable(),
 });
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    const locationId = parseInt(id, 10);
+    if (isNaN(locationId)) {
+      return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
+    }
+
+    const location = await prisma.lokasiOlahraga.findUnique({
+      where: { id: locationId },
+      include: {
+        account: {
+          select: { name: true },
+        },
+      },
+    });
+
+    if (!location) {
+      return NextResponse.json({ message: "Lokasi tidak ditemukan" }, { status: 404 });
+    }
+
+    return NextResponse.json(location, { status: 200 });
+  } catch (error: unknown) {
+    console.error("GET_LOKASI_ERROR:", error);
+    return NextResponse.json(
+      { message: "Terjadi kesalahan pada server" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
